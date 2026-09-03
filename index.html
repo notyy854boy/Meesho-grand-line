@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meesho Supply Store</title>
+    <title>Meesho Official Store</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 15px; margin: 0; padding-bottom: 70px; }
         h2 { text-align: center; color: #f8fafc; margin-bottom: 10px; }
         .section { background: #1e293b; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #334155; }
-        input, button { width: 100%; padding: 12px; margin: 8px 0; box-sizing: border-box; border-radius: 8px; border: 1px solid #475569; font-size: 14px; background: #0f172a; color: #fff; }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0; box-sizing: border-box; border-radius: 8px; border: 1px solid #475569; font-size: 14px; background: #0f172a; color: #fff; }
         button { background: #0ea5e9; border: none; font-weight: bold; cursor: pointer; }
         button:hover { background: #0284c7; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -31,65 +31,61 @@
 <body>
 
     <!-- Clickable Header for Secret Admin -->
-    <h2 onclick="toggleAdmin()" style="cursor: pointer;">🛍️ Meesho Supply ⚙️</h2>
+    <h2 onclick="toggleAdmin()" style="cursor: pointer;">🛍️ Meesho Official Store ⚙️</h2>
 
     <!-- Secret Admin Panel -->
     <div id="admin-panel" class="section hidden">
         <h3>🛠️ Secret Admin Control</h3>
-        <label><b>New User Auto-Discount (₹):</b></label>
-        <input type="number" id="admin-discount" placeholder="e.g. 108">
-        <button onclick="saveAdminDiscount()">Save Discount</button>
+        <label><b>First Order Discount (₹):</b></label>
+        <input type="number" id="admin-discount" placeholder="e.g. 100">
+        
+        <label><b>Your UPI ID for Direct Payments:</b></label>
+        <input type="text" id="admin-upi" placeholder="e.g. yourname@okhdfcbank">
+        
+        <button onclick="saveAdminSettings()">Save Admin Settings</button>
     </div>
 
     <!-- Live Banner -->
-    <div id="coupon-banner" class="banner">🎉 First Order & Online Discount Applied!</div>
+    <div id="coupon-banner" class="banner">📦 Home delivery | 💵 COD & UPI Available | 🔄 Easy returns</div>
 
-    <!-- 1. LOGIN PROMPT SHEET VIEW -->
-    <div id="view-auth" class="view-section">
-        <div class="section" style="max-width: 360px; margin: 30px auto; padding: 20px;">
-            <h3 style="text-align: center; margin-bottom: 5px;">Login & Sign Up</h3>
-            <p style="text-align: center; font-size: 12px; color: #94a3b8; margin-bottom: 15px;">Enter your phone number to continue</p>
-            
-            <label style="font-size: 12px; color: #cbd5e1;">Mobile Number</label>
-            <input type="tel" id="phone-number" placeholder="Enter 10-digit mobile number" maxlength="10">
-            
-            <button onclick="sendOtp()" style="background: #0ea5e9; margin-top: 10px;">Continue</button>
-
-            <div id="otp-container" class="hidden" style="margin-top: 15px;">
-                <label style="font-size: 12px; color: #cbd5e1;">Enter OTP</label>
-                <input type="text" id="otp-input" placeholder="Enter OTP (e.g. 1234)" maxlength="4">
-                <button onclick="verifyOtp()" style="background: #22c55e;">Verify & Sign In</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. SEARCH / CATALOG VIEW -->
+    <!-- 1. CATALOG VIEW -->
     <div id="view-search" class="view-section active-view">
         <input type="text" id="search-box" placeholder="Search products..." onkeyup="filterProducts()" style="margin-bottom: 12px;">
         <div class="grid" id="product-list"></div>
     </div>
 
-    <!-- 3. CART VIEW -->
+    <!-- 2. CART & CHECKOUT VIEW -->
     <div id="view-cart" class="view-section">
         <h3>🛒 Your Shopping Cart</h3>
         <div id="cart-items"></div>
         <div id="cart-total" style="margin-top: 15px; font-weight: bold; font-size: 16px;"></div>
-        <button onclick="checkoutCart()" style="background: #22c55e; margin-top: 10px;">Proceed to Place Order</button>
+        
+        <div class="section" style="margin-top: 15px; padding: 10px;">
+            <label style="font-size: 12px;"><b>Select Payment Mode:</b></label>
+            <select id="payment-mode">
+                <option value="COD">Cash on Delivery (COD)</option>
+                <option value="UPI">Pay Online via UPI (GPay/PhonePe)</option>
+                <option value="WALLET">Meesho Wallet</option>
+            </select>
+        </div>
+
+        <button onclick="checkoutCart()" style="background: #22c55e; margin-top: 10px;">Place Order Now</button>
     </div>
 
-    <!-- 4. ORDERS VIEW -->
+    <!-- 3. ORDERS TRACKER VIEW -->
     <div id="view-orders" class="view-section">
         <h3>📦 My Orders Tracker</h3>
         <div id="orders-list"></div>
     </div>
 
-    <!-- 5. PROFILE VIEW -->
+    <!-- 4. PROFILE VIEW (Loaded via JSON Data) -->
     <div id="view-profile" class="view-section">
         <div class="section" style="text-align: center;">
             <h3>👤 User Profile</h3>
             <p id="profile-phone" style="color: #4ade80; font-weight: bold;"></p>
-            <p style="font-size: 12px; color: #94a3b8;">First Order Auto-Discount Enabled</p>
-            <button onclick="logoutUser()" style="background: #ef4444; width: auto; padding: 8px 20px; margin-top: 10px;">Logout</button>
+            <p id="profile-uid" style="font-size: 12px; color: #38bdf8;"></p>
+            <p id="profile-device" style="font-size: 12px; color: #94a3b8;"></p>
+            <button onclick="clearSession()" style="background: #ef4444; width: auto; padding: 8px 20px; margin-top: 10px;">Reset Session</button>
         </div>
     </div>
 
@@ -105,55 +101,48 @@
         let tg = window.Telegram.WebApp;
         try { tg.expand(); } catch (e) {}
 
-        let savedPhone = localStorage.getItem("user_phone");
-        if (!savedPhone) {
-            switchView('auth');
-        } else {
-            document.getElementById('profile-phone').innerText = "Phone: +91 " + savedPhone;
+        // Embedded Account Data from JSON
+        let accountData = {
+            "mobile": "9318361726",
+            "user_id": 521887379,
+            "phone": "+919318361726",
+            "make": "Oppo",
+            "model": "A78"
+        };
+
+        // Initialize session automatically using JSON account info
+        if(!localStorage.getItem("meesho_active_user")) {
+            localStorage.setItem("meesho_active_user", JSON.stringify(accountData));
         }
+
+        let currentUser = JSON.parse(localStorage.getItem("meesho_active_user"));
+        document.getElementById('profile-phone').innerText = "Phone: " + currentUser.phone;
+        document.getElementById('profile-uid').innerText = "User ID: " + currentUser.user_id;
+        document.getElementById('profile-device').innerText = "Device: " + currentUser.make + " " + currentUser.model;
 
         function toggleAdmin() {
             let panel = document.getElementById("admin-panel");
             panel.classList.toggle("hidden");
         }
 
-        let activeDiscount = Number(localStorage.getItem("admin_controlled_discount")) || 108;
+        let activeDiscount = Number(localStorage.getItem("admin_controlled_discount")) || 100;
+        let adminUpi = localStorage.getItem("admin_upi_id") || "yourstore@upi";
+        
         document.getElementById("admin-discount").value = activeDiscount;
-        document.getElementById("coupon-banner").innerText = `🔥 First Order & Online Discount: -₹${activeDiscount} Active`;
+        document.getElementById("admin-upi").value = adminUpi;
 
-        function saveAdminDiscount() {
-            let val = document.getElementById("admin-discount").value;
-            if(!val) return alert("Enter amount!");
-            localStorage.setItem("admin_controlled_discount", val);
-            alert("Discount updated to ₹" + val);
+        function saveAdminSettings() {
+            let dVal = document.getElementById("admin-discount").value;
+            let uVal = document.getElementById("admin-upi").value;
+            if(!dVal || !uVal) return alert("Fill all fields!");
+            
+            localStorage.setItem("admin_controlled_discount", dVal);
+            localStorage.setItem("admin_upi_id", uVal);
+            alert("Admin settings updated successfully!");
             location.reload();
         }
 
-        function sendOtp() {
-            let phone = document.getElementById("phone-number").value;
-            if(phone.length < 10) return alert("Please enter a valid 10-digit number!");
-            alert("OTP sent successfully!");
-            document.getElementById("otp-container").classList.remove("hidden");
-        }
-
-        function verifyOtp() {
-            let otp = document.getElementById("otp-input").value;
-            let phone = document.getElementById("phone-number").value;
-            if(otp === "1234" || otp.length === 4) {
-                localStorage.setItem("user_phone", phone);
-                alert("Login Successful!");
-                location.reload();
-            } else {
-                alert("Invalid OTP! Use '1234'");
-            }
-        }
-
         function switchView(viewName) {
-            let isAuthed = localStorage.getItem("user_phone");
-            if (!isAuthed && viewName !== 'auth') {
-                viewName = 'auth';
-            }
-
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active-view'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
@@ -166,10 +155,10 @@
         }
 
         let products = [
-            { id: 1, name: "Analog Men's Watch", price: 147 },
-            { id: 2, name: "Casual Denim Shirt", price: 349 },
-            { id: 3, name: "Ethnic Kurti", price: 499 },
-            { id: 4, name: "Smart Fitness Band", price: 599 }
+            { id: 1, name: "Stylish Kurti Set", price: 399 },
+            { id: 2, name: "Men's Cotton Shirt", price: 499 },
+            { id: 3, name: "Wireless Earbuds", price: 699 },
+            { id: 4, name: "Smart Fitness Watch", price: 899 }
         ];
 
         function renderProducts(items) {
@@ -177,12 +166,10 @@
             if(!container) return;
             container.innerHTML = "";
             items.forEach(p => {
-                let finalPrice = p.price - activeDiscount;
-                if (finalPrice < 1) finalPrice = 9;
-
+                let finalPrice = Math.max(p.price - activeDiscount, 9);
                 container.innerHTML += `
                     <div class="card">
-                        <span class="tag">New User Deal</span>
+                        <span class="tag">40% OFF</span>
                         <h4 style="font-size: 13px; margin: 6px 0;">${p.name}</h4>
                         <div class="old-price">₹${p.price}</div>
                         <div class="price">₹${finalPrice}</div>
@@ -232,13 +219,13 @@
                     <div style="background:#0f172a; padding:10px; border-radius:6px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <div style="font-weight:bold; font-size:13px;">${item.name}</div>
-                            <div style="color:#38bdf8; font-size:12px;">₹${finalPrice} (Saved ₹${activeDiscount})</div>
+                            <div style="color:#38bdf8; font-size:12px;">₹${finalPrice}</div>
                         </div>
-                        <button onclick="removeFromCart(${index})" style="background:#ef4444; width:auto; padding:5px 10px; font-size:11px;">Cancel Order</button>
+                        <button onclick="removeFromCart(${index})" style="background:#ef4444; width:auto; padding:5px 10px; font-size:11px;">Remove</button>
                     </div>
                 `;
             });
-            totalDiv.innerHTML = `Amount To Pay: ₹${total} (Free Delivery)`;
+            totalDiv.innerHTML = `Total Amount To Pay: ₹${total} (Free Delivery)`;
         }
 
         function removeFromCart(index) {
@@ -252,15 +239,22 @@
             let cart = getCart();
             if(cart.length === 0) return alert("Cart is empty!");
 
-            let orders = JSON.parse(localStorage.getItem("user_orders")) || [];
-            let orderId = `ORDER_${Date.now()}`;
+            let paymentMode = document.getElementById("payment-mode").value;
             let total = cart.reduce((sum, item) => sum + Math.max(item.price - activeDiscount, 9), 0);
+
+            if(paymentMode === "UPI") {
+                let upiLink = `upi://pay?pa=${adminUpi}&pn=MeeshoStore&am=${total}&cu=INR`;
+                window.location.href = upiLink;
+            }
+
+            let orders = JSON.parse(localStorage.getItem("user_orders")) || [];
+            let orderId = `MEESHO_${Date.now()}`;
 
             let newOrder = {
                 orderId: orderId,
                 items: cart,
                 totalPaid: total,
-                discount: activeDiscount,
+                mode: paymentMode,
                 status: "Booking Confirmed (Shipping Soon)",
                 date: new Date().toLocaleString()
             };
@@ -269,7 +263,7 @@
             localStorage.setItem("user_orders", JSON.stringify(orders));
             localStorage.removeItem("user_cart");
 
-            alert("Order placed successfully! Check Orders tab.");
+            alert("Order placed successfully via " + paymentMode + "!");
             switchView('orders');
         }
 
@@ -289,16 +283,16 @@
                     <div style="background:#0f172a; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid #334155;">
                         <div style="font-size:11px; color:#38bdf8; font-weight:bold;">ID: #${o.orderId}</div>
                         <div style="font-size:13px; font-weight:bold; margin:4px 0;">${itemNames}</div>
-                        <div style="font-size:12px; color:#4ade80;">Amount To Pay: ₹${o.totalPaid} (Discount -₹${o.discount})</div>
+                        <div style="font-size:12px; color:#4ade80;">Paid: ₹${o.totalPaid} (${o.mode})</div>
                         <div style="font-size:11px; color:#fb7185; margin-top:4px;">Status: ${o.status}</div>
                     </div>
                 `;
             });
         }
 
-        function logoutUser() {
-            localStorage.removeItem("user_phone");
-            alert("Logged out successfully!");
+        function clearSession() {
+            localStorage.clear();
+            alert("Session cleared!");
             location.reload();
         }
     </script>
