@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Store</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: var(--tg-theme-bg-color, #f9f9f9); color: var(--tg-theme-text-color, #111); padding: 15px; margin: 0; }
+        h2 { text-align: center; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .card { background: var(--tg-theme-secondary-bg-color, #fff); padding: 10px; border-radius: 8px; text-align: center; }
+        .price { color: #d32f2f; font-weight: bold; margin: 5px 0; }
+        button { background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #fff); border: none; padding: 8px; width: 100%; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>🛍️ My Store</h2>
+    <div class="grid" id="product-list"></div>
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        let products = JSON.parse(localStorage.getItem("store_products")) || [
+            { name: "Casual Shirt", price: 349 },
+            { name: "Ethnic Kurti", price: 499 }
+        ];
+        let container = document.getElementById("product-list");
+        products.forEach(p => {
+            container.innerHTML += `<div class="card"><h4>${p.name}</h4><div class="price">₹${p.price}</div><button onclick="tg.showAlert('Ordered ${p.name}!')">Buy</button></div>`;
+        });
+    </script>
+</body>
+</html>
