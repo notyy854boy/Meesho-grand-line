@@ -7,9 +7,9 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 15px; margin: 0; padding-bottom: 70px; }
-        h2 { text-align: center; color: #f8fafc; margin-bottom: 15px; }
+        h2 { text-align: center; color: #f8fafc; margin-bottom: 10px; }
         .section { background: #1e293b; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #334155; }
-        input, button { width: 100%; padding: 10px; margin: 6px 0; box-sizing: border-box; border-radius: 6px; border: 1px solid #475569; font-size: 14px; background: #0f172a; color: #fff; }
+        input, button { width: 100%; padding: 12px; margin: 8px 0; box-sizing: border-box; border-radius: 8px; border: 1px solid #475569; font-size: 14px; background: #0f172a; color: #fff; }
         button { background: #0ea5e9; border: none; font-weight: bold; cursor: pointer; }
         button:hover { background: #0284c7; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -20,7 +20,9 @@
         .hidden { display: none; }
         .tag { background: #22c55e; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 5px; }
         
-        /* Bottom Navigation Bar */
+        .view-section { display: none; }
+        .view-section.active-view { display: block; }
+
         .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #1e293b; border-top: 1px solid #334155; display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
         .nav-item { color: #94a3b8; text-align: center; font-size: 11px; text-decoration: none; cursor: pointer; }
         .nav-item.active { color: #38bdf8; font-weight: bold; }
@@ -28,7 +30,7 @@
 </head>
 <body>
 
-    <!-- Clickable Header to Open Admin Panel -->
+    <!-- Clickable Header for Secret Admin -->
     <h2 onclick="toggleAdmin()" style="cursor: pointer;">🛍️ Meesho Official Store ⚙️</h2>
 
     <!-- Secret Admin Panel -->
@@ -42,90 +44,264 @@
     <!-- Live Banner -->
     <div id="coupon-banner" class="banner">🎉 First Order & Online Discount Applied!</div>
 
-    <!-- Product Grid -->
-    <div class="grid" id="product-list"></div>
+    <!-- 1. LOGIN PROMPT SHEET VIEW (Matching your layout_login_prompt_sheet_0 XML) -->
+    <div id="view-auth" class="view-section">
+        <div class="section" style="max-width: 360px; margin: 30px auto; padding: 20px;">
+            <h3 style="text-align: center; margin-bottom: 5px;">Login & Sign Up</h3>
+            <p style="text-align: center; font-size: 12px; color: #94a3b8; margin-bottom: 15px;">Enter your phone number to access exclusive first-order discounts.</p>
+            
+            <label style="font-size: 12px; color: #cbd5e1;">Mobile Number</label>
+            <input type="tel" id="phone-number" placeholder="Enter 10-digit mobile number" maxlength="10">
+            
+            <button onclick="sendOtp()" style="background: #0ea5e9; margin-top: 10px;">Continue</button>
+
+            <div id="otp-container" class="hidden" style="margin-top: 15px;">
+                <label style="font-size: 12px; color: #cbd5e1;">Enter OTP</label>
+                <input type="text" id="otp-input" placeholder="Enter 4-digit OTP (e.g. 1234)" maxlength="4">
+                <button onclick="verifyOtp()" style="background: #22c55e;">Verify & Sign In</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. SEARCH / CATALOG VIEW -->
+    <div id="view-search" class="view-section active-view">
+        <input type="text" id="search-box" placeholder="Search products..." onkeyup="filterProducts()" style="margin-bottom: 12px;">
+        <div class="grid" id="product-list"></div>
+    </div>
+
+    <!-- 3. CART VIEW -->
+    <div id="view-cart" class="view-section">
+        <h3>🛒 Your Shopping Cart</h3>
+        <div id="cart-items"></div>
+        <div id="cart-total" style="margin-top: 15px; font-weight: bold; font-size: 16px;"></div>
+        <button onclick="checkoutCart()" style="background: #22c55e; margin-top: 10px;">Proceed to Place Order</button>
+    </div>
+
+    <!-- 4. ORDERS VIEW -->
+    <div id="view-orders" class="view-section">
+        <h3>📦 My Orders Tracker</h3>
+        <div id="orders-list"></div>
+    </div>
+
+    <!-- 5. PROFILE VIEW -->
+    <div id="view-profile" class="view-section">
+        <div class="section" style="text-align: center;">
+            <h3>👤 User Profile</h3>
+            <p id="profile-phone" style="color: #4ade80; font-weight: bold;"></p>
+            <p style="font-size: 12px; color: #94a3b8;">First Order Auto-Discount Enabled</p>
+            <button onclick="logoutUser()" style="background: #ef4444; width: auto; padding: 8px 20px; margin-top: 10px;">Logout</button>
+        </div>
+    </div>
 
     <!-- Bottom Navigation -->
     <div class="nav-bar">
-        <div class="nav-item active" onclick="navClick('Search')">🔍 Search</div>
-        <div class="nav-item" onclick="navClick('Cart')">🛒 Cart</div>
-        <div class="nav-item" onclick="navClick('Orders')">📦 Orders</div>
-        <div class="nav-item" onclick="navClick('Profile')">👤 Profile</div>
+        <div class="nav-item active" id="nav-search" onclick="switchView('search')">🔍 Search</div>
+        <div class="nav-item" id="nav-cart" onclick="switchView('cart')">🛒 Cart</div>
+        <div class="nav-item" id="nav-orders" onclick="switchView('orders')">📦 Orders</div>
+        <div class="nav-item" id="nav-profile" onclick="switchView('profile')">👤 Profile</div>
     </div>
 
     <script>
-        // Initialize Telegram Web App safely
         let tg = window.Telegram.WebApp;
-        try {
-            tg.expand();
-        } catch (e) {
-            console.log("Not inside Telegram app");
+        try { tg.expand(); } catch (e) {}
+
+        // Check Login State on Load
+        let savedPhone = localStorage.getItem("user_phone");
+        if (!savedPhone) {
+            switchView('auth');
+        } else {
+            document.getElementById('profile-phone').innerText = "Phone: +91 " + savedPhone;
         }
 
-        // Toggle Admin Panel function
         function toggleAdmin() {
             let panel = document.getElementById("admin-panel");
-            if (panel.classList.contains("hidden")) {
-                panel.classList.remove("hidden");
-            } else {
-                panel.classList.add("hidden");
-            }
+            panel.classList.toggle("hidden");
         }
 
-        // Load Discount Value
         let activeDiscount = Number(localStorage.getItem("admin_controlled_discount")) || 108;
-        let discountInput = document.getElementById("admin-discount");
-        if(discountInput) discountInput.value = activeDiscount;
-        
-        let banner = document.getElementById("coupon-banner");
-        if(banner) banner.innerText = `🔥 First Order & Online Discount: -₹${activeDiscount} Active`;
+        document.getElementById("admin-discount").value = activeDiscount;
+        document.getElementById("coupon-banner").innerText = `🔥 First Order & Online Discount: -₹${activeDiscount} Active`;
 
         function saveAdminDiscount() {
             let val = document.getElementById("admin-discount").value;
-            if(val === "") {
-                alert("Please enter a valid amount!");
-                return;
-            }
+            if(!val) return alert("Enter amount!");
             localStorage.setItem("admin_controlled_discount", val);
             alert("Discount updated to ₹" + val);
             location.reload();
         }
 
-        // Navigation Clicks
-        function navClick(tab) {
-            alert("Switched to " + tab);
+        // Phone Auth Logic
+        function sendOtp() {
+            let phone = document.getElementById("phone-number").value;
+            if(phone.length < 10) return alert("Please enter a valid 10-digit phone number!");
+            alert("OTP sent to +91 " + phone);
+            document.getElementById("otp-container").classList.remove("hidden");
         }
 
-        // Render Products
+        function verifyOtp() {
+            let otp = document.getElementById("otp-input").value;
+            let phone = document.getElementById("phone-number").value;
+            if(otp === "1234" || otp.length === 4) {
+                localStorage.setItem("user_phone", phone);
+                alert("Login Successful!");
+                location.reload();
+            } else {
+                alert("Invalid OTP! Use '1234'");
+            }
+        }
+
+        function switchView(viewName) {
+            let isAuthed = localStorage.getItem("user_phone");
+            if (!isAuthed && viewName !== 'auth') {
+                viewName = 'auth';
+            }
+
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active-view'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+            document.getElementById('view-' + viewName).classList.add('active-view');
+            let navEl = document.getElementById('nav-' + viewName);
+            if(navEl) navEl.classList.add('active');
+
+            if(viewName === 'cart') renderCart();
+            if(viewName === 'orders') renderOrders();
+        }
+
         let products = [
-            { name: "Analog Men's Watch", price: 147 },
-            { name: "Casual Denim Shirt", price: 349 },
-            { name: "Ethnic Kurti", price: 499 },
-            { name: "Smart Fitness Band", price: 599 }
+            { id: 1, name: "Analog Men's Watch", price: 147 },
+            { id: 2, name: "Casual Denim Shirt", price: 349 },
+            { id: 3, name: "Ethnic Kurti", price: 499 },
+            { id: 4, name: "Smart Fitness Band", price: 599 }
         ];
 
-        let container = document.getElementById("product-list");
-        if(container) {
+        function renderProducts(items) {
+            let container = document.getElementById("product-list");
+            if(!container) return;
             container.innerHTML = "";
-            products.forEach(p => {
+            items.forEach(p => {
                 let finalPrice = p.price - activeDiscount;
                 if (finalPrice < 1) finalPrice = 9;
 
                 container.innerHTML += `
                     <div class="card">
-                        <span class="tag">New User Special</span>
+                        <span class="tag">New User Deal</span>
                         <h4 style="font-size: 13px; margin: 6px 0;">${p.name}</h4>
                         <div class="old-price">₹${p.price}</div>
                         <div class="price">₹${finalPrice}</div>
-                        <div style="font-size: 10px; color: #4ade80; margin-bottom: 6px;">You Save ₹${activeDiscount}</div>
-                        <button onclick="buyProduct('${p.name}', ${finalPrice})">Buy Now</button>
+                        <div style="font-size: 10px; color: #4ade80; margin-bottom: 6px;">Save ₹${activeDiscount}</div>
+                        <button onclick="addToCart(${p.id})">Add to Cart</button>
+                    </div>
+                `;
+            });
+        }
+        renderProducts(products);
+
+        function filterProducts() {
+            let query = document.getElementById("search-box").value.toLowerCase();
+            let filtered = products.filter(p => p.name.toLowerCase().includes(query));
+            renderProducts(filtered);
+        }
+
+        function getCart() {
+            return JSON.parse(localStorage.getItem("user_cart")) || [];
+        }
+
+        function addToCart(id) {
+            let cart = getCart();
+            let product = products.find(p => p.id === id);
+            cart.push(product);
+            localStorage.setItem("user_cart", JSON.stringify(cart));
+            alert(product.name + " added to Cart!");
+        }
+
+        function renderCart() {
+            let cart = getCart();
+            let container = document.getElementById("cart-items");
+            let totalDiv = document.getElementById("cart-total");
+            
+            if(cart.length === 0) {
+                container.innerHTML = "<p style='color:#94a3b8; text-align:center;'>Your cart is empty.</p>";
+                totalDiv.innerHTML = "";
+                return;
+            }
+
+            container.innerHTML = "";
+            let total = 0;
+            cart.forEach((item, index) => {
+                let finalPrice = Math.max(item.price - activeDiscount, 9);
+                total += finalPrice;
+                container.innerHTML += `
+                    <div style="background:#0f172a; padding:10px; border-radius:6px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:bold; font-size:13px;">${item.name}</div>
+                            <div style="color:#38bdf8; font-size:12px;">₹${finalPrice} (Saved ₹${activeDiscount})</div>
+                        </div>
+                        <button onclick="removeFromCart(${index})" style="background:#ef4444; width:auto; padding:5px 10px; font-size:11px;">Remove</button>
+                    </div>
+                `;
+            });
+            totalDiv.innerHTML = `Total Payable Amount: ₹${total} (Free Delivery)`;
+        }
+
+        function removeFromCart(index) {
+            let cart = getCart();
+            cart.splice(index, 1);
+            localStorage.setItem("user_cart", JSON.stringify(cart));
+            renderCart();
+        }
+
+        function checkoutCart() {
+            let cart = getCart();
+            if(cart.length === 0) return alert("Cart is empty!");
+
+            let orders = JSON.parse(localStorage.getItem("user_orders")) || [];
+            let orderId = `ORDER_${Date.now()}`;
+            let total = cart.reduce((sum, item) => sum + Math.max(item.price - activeDiscount, 9), 0);
+
+            let newOrder = {
+                orderId: orderId,
+                items: cart,
+                totalPaid: total,
+                discount: activeDiscount,
+                status: "On the way (Shipping Soon)",
+                date: new Date().toLocaleString()
+            };
+
+            orders.unshift(newOrder);
+            localStorage.setItem("user_orders", JSON.stringify(orders));
+            localStorage.removeItem("user_cart");
+
+            alert("Order placed successfully! Check Orders tab.");
+            switchView('orders');
+        }
+
+        function renderOrders() {
+            let orders = JSON.parse(localStorage.getItem("user_orders")) || [];
+            let container = document.getElementById("orders-list");
+
+            if(orders.length === 0) {
+                container.innerHTML = "<p style='color:#94a3b8; text-align:center;'>No orders placed yet.</p>";
+                return;
+            }
+
+            container.innerHTML = "";
+            orders.forEach(o => {
+                let itemNames = o.items.map(i => i.name).join(", ");
+                container.innerHTML += `
+                    <div style="background:#0f172a; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid #334155;">
+                        <div style="font-size:11px; color:#38bdf8; font-weight:bold;">ID: #${o.orderId}</div>
+                        <div style="font-size:13px; font-weight:bold; margin:4px 0;">${itemNames}</div>
+                        <div style="font-size:12px; color:#4ade80;">Total Paid: ₹${o.totalPaid} (Discount -₹${o.discount})</div>
+                        <div style="font-size:11px; color:#fb7185; margin-top:4px;">Status: ${o.status}</div>
                     </div>
                 `;
             });
         }
 
-        function buyProduct(name, price) {
-            alert("Order placed successfully for " + name + " at ₹" + price + "!");
+        function logoutUser() {
+            localStorage.removeItem("user_phone");
+            alert("Logged out successfully!");
+            location.reload();
         }
     </script>
 </body>
