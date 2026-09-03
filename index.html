@@ -7,27 +7,51 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: var(--tg-theme-bg-color, #f9f9f9); color: var(--tg-theme-text-color, #111); padding: 15px; margin: 0; }
-        h2 { text-align: center; }
+        h2 { text-align: center; margin-bottom: 5px; }
+        .coupon-banner { background: #e3f2fd; color: #0d47a1; padding: 8px; text-align: center; font-size: 13px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .card { background: var(--tg-theme-secondary-bg-color, #fff); padding: 10px; border-radius: 8px; text-align: center; }
+        .card { background: var(--tg-theme-secondary-bg-color, #fff); padding: 10px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .price { color: #d32f2f; font-weight: bold; margin: 5px 0; }
-        button { background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #fff); border: none; padding: 8px; width: 100%; border-radius: 5px; cursor: pointer; }
+        button { background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #fff); border: none; padding: 8px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
     <h2>🛍️ My Store</h2>
+    <div class="coupon-banner">🎉 Default Coupon Applied: ₹50 OFF!</div>
+    
     <div class="grid" id="product-list"></div>
+
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
+
         let products = JSON.parse(localStorage.getItem("store_products")) || [
             { name: "Casual Shirt", price: 349 },
             { name: "Ethnic Kurti", price: 499 }
         ];
+
         let container = document.getElementById("product-list");
+
         products.forEach(p => {
-            container.innerHTML += `<div class="card"><h4>${p.name}</h4><div class="price">₹${p.price}</div><button onclick="tg.showAlert('Ordered ${p.name}!')">Buy</button></div>`;
+            // Automatic Coupon Calculation (₹50 discount on each item preview)
+            let discount = 50;
+            let finalPrice = p.price - discount;
+            if (finalPrice < 0) finalPrice = 0;
+
+            container.innerHTML += `
+                <div class="card">
+                    <h4>${p.name}</h4>
+                    <div style="text-decoration: line-through; color: gray; font-size: 12px;">₹${p.price}</div>
+                    <div class="price">₹${finalPrice}</div>
+                    <div style="font-size: 10px; color: green; margin-bottom: 8px;">Saved ₹${discount}</div>
+                    <button onclick="buyNow('${p.name}', ${finalPrice})">Buy</button>
+                </div>
+            `;
         });
+
+        function buyNow(name, price) {
+            tg.showAlert(`Order Confirmed! "${name}" for ₹${price} (Coupon Applied).`);
+        }
     </script>
 </body>
 </html>
