@@ -3,55 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Store</title>
+    <title>Meesho Mini Official Store</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: var(--tg-theme-bg-color, #f9f9f9); color: var(--tg-theme-text-color, #111); padding: 15px; margin: 0; }
-        h2 { text-align: center; margin-bottom: 5px; }
-        .coupon-banner { background: #e3f2fd; color: #0d47a1; padding: 8px; text-align: center; font-size: 13px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; }
+        h2 { text-align: center; }
+        .section { background: var(--tg-theme-secondary-bg-color, #fff); padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        input, button { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; }
+        button { background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #fff); border: none; font-weight: bold; cursor: pointer; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .card { background: var(--tg-theme-secondary-bg-color, #fff); padding: 10px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .card { background: var(--tg-theme-secondary-bg-color, #fff); padding: 10px; border-radius: 8px; text-align: center; }
         .price { color: #d32f2f; font-weight: bold; margin: 5px 0; }
-        button { background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #fff); border: none; padding: 8px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .banner { background: #e3f2fd; color: #0d47a1; padding: 8px; text-align: center; font-size: 13px; border-radius: 6px; margin-bottom: 10px; font-weight: bold; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <h2>🛍️ My Store</h2>
-    <div class="coupon-banner">🎉 Default Coupon Applied: ₹50 OFF!</div>
-    
-    <div class="grid" id="product-list"></div>
+
+    <!-- Admin Panel Toggle Button -->
+    <button style="background:#333; margin-bottom:15px;" onclick="toggleAdmin()">⚙️ Admin Dashboard Control</button>
+
+    <!-- Admin Panel Container -->
+    <div id="admin-panel" class="section hidden">
+        <h3>🛠️ Official Admin & Mini Coupon Control</h3>
+        
+        <!-- Mini Admin: Auto Coupon for New Users -->
+        <label><b>New User Default Coupon Discount (₹):</b></label>
+        <input type="number" id="admin-discount" placeholder="Enter discount amount e.g. 50">
+        <button onclick="saveCoupon()">Update New User Coupon</button>
+
+        <hr style="margin: 15px 0; border:0; border-top:1px solid #ddd;">
+
+        <!-- Main Admin: Add Products -->
+        <label><b>Add New Product:</b></label>
+        <input type="text" id="p-name" placeholder="Product Name">
+        <input type="number" id="p-price" placeholder="Price (₹)">
+        <button onclick="addProduct()">Add Product to Store</button>
+    </div>
+
+    <!-- Store Front Section -->
+    <div class="section">
+        <h2>🛍️ Meesho Official Store</h2>
+        <div id="coupon-notice" class="banner">🎉 New User Offer: Loading...</div>
+        <div class="grid" id="product-list"></div>
+    </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
 
+        // Toggle Admin View
+        function toggleAdmin() {
+            let panel = document.getElementById("admin-panel");
+            panel.classList.toggle("hidden");
+        }
+
+        // Automatic New User Default Coupon Management
+        let currentDiscount = Number(localStorage.getItem("default_coupon")) || 50;
+        document.getElementById("admin-discount").value = currentDiscount;
+        document.getElementById("coupon-notice").innerText = `🎉 New User Offer: ₹${currentDiscount} OFF Automatically Applied!`;
+
+        function saveCoupon() {
+            let val = document.getElementById("admin-discount").value;
+            if(val === "") return alert("Please enter amount!");
+            localStorage.setItem("default_coupon", val);
+            alert("New user default coupon updated successfully!");
+            location.reload();
+        }
+
+        // Product List & Storage Handler
         let products = JSON.parse(localStorage.getItem("store_products")) || [
             { name: "Casual Shirt", price: 349 },
             { name: "Ethnic Kurti", price: 499 }
         ];
 
-        let container = document.getElementById("product-list");
+        function addProduct() {
+            let name = document.getElementById("p-name").value;
+            let price = document.getElementById("p-price").value;
+            if(!name || !price) return alert("Fill all fields!");
+            products.push({ name, price: Number(price) });
+            localStorage.setItem("store_products", JSON.stringify(products));
+            alert("Product added successfully!");
+            location.reload();
+        }
 
+        let container = document.getElementById("product-list");
         products.forEach(p => {
-            // Automatic Coupon Calculation (₹50 discount on each item preview)
-            let discount = 50;
-            let finalPrice = p.price - discount;
+            let finalPrice = p.price - currentDiscount;
             if (finalPrice < 0) finalPrice = 0;
 
             container.innerHTML += `
                 <div class="card">
                     <h4>${p.name}</h4>
-                    <div style="text-decoration: line-through; color: gray; font-size: 12px;">₹${p.price}</div>
+                    <div style="text-decoration: line-through; color: gray; font-size: 11px;">₹${p.price}</div>
                     <div class="price">₹${finalPrice}</div>
-                    <div style="font-size: 10px; color: green; margin-bottom: 8px;">Saved ₹${discount}</div>
-                    <button onclick="buyNow('${p.name}', ${finalPrice})">Buy</button>
+                    <div style="font-size: 9px; color: green; margin-bottom: 5px;">New User Saved ₹${currentDiscount}</div>
+                    <button onclick="tg.showAlert('Order placed for ${p.name} at ₹${finalPrice}!')">Buy Now</button>
                 </div>
             `;
         });
-
-        function buyNow(name, price) {
-            tg.showAlert(`Order Confirmed! "${name}" for ₹${price} (Coupon Applied).`);
-        }
     </script>
 </body>
 </html>
