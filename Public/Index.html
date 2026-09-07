@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meesho Order Bot</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #fdfbf7; margin: 0; padding: 12px; color: #333; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px; border-radius: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+        .badge-account { background: #f2e3e7; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; color: #60122e; }
+        .cart-box { background: #fff; padding: 16px; border-radius: 16px; margin-top: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .btn-checkout { background: #60122e; color: #fff; border: none; width: 100%; padding: 14px; border-radius: 25px; font-weight: bold; font-size: 15px; cursor: pointer; }
+        .wallet-alert { background: #fff; padding: 12px; border-radius: 14px; margin-top: 12px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .btn-funds { background: #60122e; color: #fff; border: none; padding: 10px 18px; border-radius: 20px; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div style="background:#60122e; color:#fff; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-weight:bold;">m</div>
+        <div class="badge-account">93117 17102 ✅</div>
+        <div style="font-weight:bold;">💰 ₹0</div>
+    </div>
+
+    <!-- Cart View Container -->
+    <div class="cart-box">
+        <h3 style="margin-top:0; color:#60122e;">My Cart</h3>
+        <p style="font-size: 14px;">📍 <b>Rakib</b> · 8695034962 <span style="background:#eef2f5; padding:2px 6px; border-radius:4px; font-size:11px;">HOME</span></p>
+        <p style="font-size: 12px; color: #666; margin-top:-5px;">Matacl chowk, Block F, Sanibajar caterpuri sec se23a, Gurugram...</p>
+        <hr style="border: 0; border-top: 1px solid #f0f0f0;">
+        
+        <div style="display: flex; gap: 12px; align-items: center; margin-top: 12px;">
+            <div style="background:#ddd; width:60px; height:60px; border-radius:8px;"></div>
+            <div>
+                <p style="margin: 0; font-size: 14px; font-weight: bold;">Trending TWS Bluetooth Wireless Earbuds...</p>
+                <p style="margin: 4px 0; color: #60122e; font-weight: bold;">₹338 <del style="color: #999; font-size: 12px;">₹1,499</del></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wallet Shortfall Box -->
+    <div class="wallet-alert">
+        <div>
+            <span style="color: #60122e; font-size: 18px;">₹10</span>
+            <div style="font-size: 12px; color: #777; font-weight: normal;">needed in wallet</div>
+        </div>
+        <button class="btn-funds">+ Add Funds</button>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <button class="btn-checkout">Proceed to Pay (₹51)</button>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+    </script>
+</body>
+</html>
