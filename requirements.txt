@@ -4,3 +4,4 @@ motor
 aiogram
 requests
 pydantic
+dnspython
