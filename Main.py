@@ -10,12 +10,10 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 import requests
 
-# Configuration from Environment Variables
-BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN")
-MONGO_URI = os.getenv("MONGO_URI", "YOUR_MONGO_URI")
-MINI_APP_URL = os.getenv(
-    "MINI_APP_URL", "https://your-render-url.onrender.com"
-)
+# Direct Configuration (Aapke credentials set hain)
+BOT_TOKEN = "8995479806:AAEWU0T7ClnI5KHlm9IRRC3zhcGPu82OMOk"
+MONGO_URI = "mongodb+srv://rakib8802:rakib8802@cluster0.4kzmy9o.mongodb.net/?appName=Cluster0"
+MINI_APP_URL = "https://your-render-url.onrender.com"
 
 app = FastAPI()
 bot = Bot(token=BOT_TOKEN)
@@ -72,7 +70,7 @@ async def start_cmd(message: types.Message):
 
 # --- Meesho Preorder API Execution Function ---
 def trigger_meesho_preorder(user_cookie: str, order_payload: dict):
-  url = "https://www.meesho.com/mcheckout/api/4.0/preorders"  #[span_1](start_span)[span_1](end_span)
+  url = "https://www.meesho.com/mcheckout/api/4.0/preorders"
 
   headers = {
       "content-type": "application/json",
