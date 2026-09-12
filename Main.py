@@ -10,17 +10,17 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 import requests
 
-# Direct Configuration (Aapke credentials set hain)
+# Direct Configuration (Fully Set)
 BOT_TOKEN = "8995479806:AAEWU0T7ClnI5KHlm9IRRC3zhcGPu82OMOk"
 MONGO_URI = "mongodb+srv://rakib8802:rakib8802@cluster0.4kzmy9o.mongodb.net/?appName=Cluster0"
-MINI_APP_URL = "https://your-render-url.onrender.com"
+MINI_APP_URL = "https://your-render-url.onrender.com"  # Render par deploy karne ke baad yahan apna live URL daal dena
 
 app = FastAPI()
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-# MongoDB Client Setup
-client = AsyncIOMotorClient(MONGO_URI)
+# MongoDB Client Setup with timeout handling
+client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=5000)
 db = client["meesho_bot_db"]
 
 # Public folder setup for Mini App frontend
@@ -84,7 +84,7 @@ def trigger_meesho_preorder(user_cookie: str, order_payload: dict):
   }
 
   try:
-    response = requests.post(url, json=order_payload, headers=headers)
+    response = requests.post(url, json=order_payload, headers=headers, timeout=10)
     if response.status_code == 200:
       return {"success": True, "data": response.json()}
     else:
@@ -116,9 +116,9 @@ async def place_order(data: OrderRequest):
           "message": f"₹{total_required - user_balance} needed in wallet",
       }
 
-    # 2. Trigger Real Meesho Preorder API
-    meesho_response = trigger_meesho_preorder(
-        data.user_cookie, data.order_payload
+    # 2. Trigger Real Meesho Preorder API (Run in thread to prevent blocking event loop)
+    meesho_response = await asyncio.to_thread(
+        trigger_meesho_preorder, data.user_cookie, data.order_payload
     )
 
     if not meesho_response.get("success"):
@@ -169,8 +169,12 @@ async def run_telegram_bot():
 
 @app.on_event("startup")
 async def startup_event():
-  await client.admin.command("ping")
-  print("Connected to MongoDB Atlas successfully!")
+  try:
+    await client.admin.command("ping")
+    print("Connected to MongoDB Atlas successfully!")
+  except Exception as e:
+    print(f"MongoDB Connection Error: {e}")
+  
   asyncio.create_task(run_telegram_bot())
 
 
