@@ -23,7 +23,7 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 # MongoDB Client Setup with timeout handling
-client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=5000, tlsCAFile=certifi.where())
 db = client["meesho_bot_db"]
 
 # Public folder setup for Mini App frontend (Crash Fix Added)
