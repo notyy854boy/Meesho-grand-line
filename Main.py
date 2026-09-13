@@ -12,7 +12,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 import uvicorn
 
-# --- CONFIGURATION (Tumhare exact details) ---
+# --- CONFIGURATION ---
 BOT_TOKEN = "6995479806:AAHAtjlwgq7YdSlAg--tXpyLnnniJynlXw0"
 MONGO_URI = "mongodb+srv://rakib8802:rakib8802@cluster0.4kzny9o.mongodb.net/?appName=Cluster0"
 WEBAPP_URL = "https://meesho-grand-line.onrender.com"
@@ -31,7 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# MongoDB Client Setup with SSL fix for Render
+# MongoDB Client Setup with SSL fix
 client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=5000, tlsCAFile=certifi.where())
 db = client["meesho_bot_db"]
 users_collection = db["users"]
@@ -45,7 +45,14 @@ app.mount("/static", StaticFiles(directory="public"), name="static")
 async def serve_frontend():
     return FileResponse("public/index.html")
 
-# --- FASTAPI ROUTES (UI to Backend) ---
+# --- RENDER FIX: START BOT WITH FASTAPI ---
+@app.on_event("startup")
+async def on_startup():
+    # Purana webhook delete karega aur bot ko zinda karega
+    await bot.delete_webhook(drop_pending_updates=True)
+    asyncio.create_task(dp.start_polling(bot))
+
+# --- FASTAPI ROUTES ---
 class OrderRequest(BaseModel):
     user_id: str
     product_id: str
@@ -57,11 +64,9 @@ async def place_order(order: OrderRequest):
     if not user or user.get("wallet", 0) < order.price:
         return {"status": "error", "message": "Insufficient funds in wallet"}
     
-    # Deduct balance and save order
     await users_collection.update_one({"user_id": order.user_id}, {"$inc": {"wallet": -order.price}})
     await orders_collection.insert_one({"user_id": order.user_id, "product_id": order.product_id, "status": "Placed"})
     
-    # Send Telegram alert
     await bot.send_message(order.user_id, f"✅ Order Placed Successfully!\nProduct: {order.product_id}\nDeducted: ₹{order.price}")
     return {"status": "success", "message": "Order placed successfully!"}
 
@@ -74,7 +79,6 @@ async def get_wallet(user_id: str):
 @dp.message(Command("start"))
 async def start_cmd(message: types.Message):
     user_id = str(message.from_user.id)
-    # New user register
     if not await users_collection.find_one({"user_id": user_id}):
         await users_collection.insert_one({"user_id": user_id, "wallet": 0, "accounts": []})
 
@@ -104,11 +108,5 @@ async def handle_callbacks(callback: types.CallbackQuery):
         await callback.message.answer("Scan the QR code or send UPI ID to add funds.")
     await callback.answer()
 
-# --- SERVER RUNNER ---
-async def main():
-    config = uvicorn.Config(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), log_level="info")
-    server = uvicorn.Server(config)
-    await asyncio.gather(server.serve(), dp.start_polling(bot))
-
 if __name__ == "__main__":
-    asyncio.run(main())
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
