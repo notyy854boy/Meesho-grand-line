@@ -1,7 +1,7 @@
 import certifi
 import asyncio
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -9,11 +9,12 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.filters import Command
 from motor.motor_asyncio import AsyncIOMotorClient
-from pydantic import BaseModel
 import uvicorn
+from pydantic import BaseModel
 
 # --- CONFIGURATION ---
-BOT_TOKEN = "8995479806:AAHW047HqtIdYrAq3UU8rgYHrN_tILkdBUo"
+# YAHAN APNA NAYA FRESH TOKEN DAALNA (Kyunki purana unauthorized ho gaya tha)
+BOT_TOKEN = "TUMHARA_NAYA_BOT_TOKEN_YAHAN_DALO" 
 MONGO_URI = "mongodb+srv://rakib8802:rakib8802@cluster0.4kzny9o.mongodb.net/?appName=Cluster0"
 WEBAPP_URL = "https://meesho-grand-line.onrender.com"
 
@@ -22,7 +23,7 @@ app = FastAPI()
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-# CORS for frontend connection
+# CORS Setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -45,14 +46,26 @@ app.mount("/static", StaticFiles(directory="public"), name="static")
 async def serve_frontend():
     return FileResponse("public/index.html")
 
-# --- RENDER FIX: START BOT WITH FASTAPI ---
+# --- WEBHOOK SETUP (THE GAME CHANGER) ---
 @app.on_event("startup")
 async def on_startup():
-    # Purana webhook delete karega aur bot ko zinda karega
-    await bot.delete_webhook(drop_pending_updates=True)
-    asyncio.create_task(dp.start_polling(bot))
+    # Server start hote hi Telegram ko batayega ki messages is URL par bhejo
+    webhook_url = f"{WEBAPP_URL}/webhook"
+    await bot.set_webhook(url=webhook_url, drop_pending_updates=True)
 
-# --- FASTAPI ROUTES ---
+@app.on_event("shutdown")
+async def on_shutdown():
+    await bot.delete_webhook()
+
+@app.post("/webhook")
+async def bot_webhook(request: Request):
+    # Telegram se aane wale messages ko FastAPI yahan receive karega
+    update_data = await request.json()
+    update = types.Update(**update_data)
+    await dp.feed_update(bot=bot, update=update)
+    return {"status": "ok"}
+
+# --- FASTAPI ROUTES (UI to Backend) ---
 class OrderRequest(BaseModel):
     user_id: str
     product_id: str
@@ -79,6 +92,7 @@ async def get_wallet(user_id: str):
 @dp.message(Command("start"))
 async def start_cmd(message: types.Message):
     user_id = str(message.from_user.id)
+    # New user register
     if not await users_collection.find_one({"user_id": user_id}):
         await users_collection.insert_one({"user_id": user_id, "wallet": 0, "accounts": []})
 
@@ -108,5 +122,7 @@ async def handle_callbacks(callback: types.CallbackQuery):
         await callback.message.answer("Scan the QR code or send UPI ID to add funds.")
     await callback.answer()
 
+# --- SERVER RUNNER ---
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+    # Webhook wale system mein hum sirf FastAPI ko normal tareeke se run karte hain
+    uvicorn.run("Main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
