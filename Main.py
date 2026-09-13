@@ -1,7 +1,7 @@
 import certifi
 import asyncio
 import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,7 +14,7 @@ import uvicorn
 # --- CONFIGURATION ---
 BOT_TOKEN = "8995479806:AAHW047HqtIdYrAq3UU8rgYHrN_tILkdBUo"
 MONGO_URI = "mongodb+srv://rakib8802:rakib8802@cluster0.4kzny9o.mongodb.net/?appName=Cluster0"
-WEBAPP_URL = "https://main-py-owl7.onrender.com"  # YAHAN ASLI RENDER URL SET KAR DIYA HAI
+WEBAPP_URL = "https://main-py-owl7.onrender.com"
 
 # --- INITIALIZATION ---
 app = FastAPI()
@@ -36,12 +36,7 @@ users_collection = db["users"]
 os.makedirs("public", exist_ok=True)
 app.mount("/static", StaticFiles(directory="public"), name="static")
 
-# --- WEBHOOK & ROUTES ---
-@app.on_event("startup")
-async def on_startup():
-    webhook_url = f"{WEBAPP_URL}/webhook"
-    await bot.set_webhook(url=webhook_url, drop_pending_updates=True)
-
+# --- FASTAPI ROUTES (Frontend) ---
 @app.get("/")
 async def serve_frontend():
     return FileResponse("public/index.html")
@@ -49,16 +44,6 @@ async def serve_frontend():
 @app.get("/ping")
 async def ping_server():
     return {"status": "Success", "message": "Server is 100% awake and running!"}
-
-@app.post("/webhook")
-async def bot_webhook(request: Request):
-    try:
-        update_data = await request.json()
-        update = types.Update(**update_data)
-        await dp.feed_update(bot=bot, update=update)
-    except Exception as e:
-        print("Error in webhook:", e)
-    return {"status": "ok"}
 
 # --- TELEGRAM BOT LOGIC ---
 @dp.message(Command("start"))
@@ -77,5 +62,13 @@ async def start_cmd(message: types.Message):
         parse_mode="Markdown"
     )
 
+# Background task to run bot polling alongside FastAPI without Webhook conflicts
+@app.on_event("startup")
+async def startup_event():
+    # Purana koi bhi webhook ho toh usko hata do taaki polling smoothly chale
+    await bot.delete_webhook(drop_pending_updates=True)
+    # Background mein bot ka polling shuru kar do
+    asyncio.create_task(dp.start_polling(bot))
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+    uvicorn.run("Main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
