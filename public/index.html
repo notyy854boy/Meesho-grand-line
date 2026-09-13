@@ -2,59 +2,210 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meesho Order Bot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grand Line Store</title>
+    <!-- Telegram WebApp Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #fdfbf7; margin: 0; padding: 12px; color: #333; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px; border-radius: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
-        .badge-account { background: #f2e3e7; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; color: #60122e; }
-        .cart-box { background: #fff; padding: 16px; border-radius: 16px; margin-top: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .btn-checkout { background: #60122e; color: #fff; border: none; width: 100%; padding: 14px; border-radius: 25px; font-weight: bold; font-size: 15px; cursor: pointer; }
-        .wallet-alert { background: #fff; padding: 12px; border-radius: 14px; margin-top: 12px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
-        .btn-funds { background: #60122e; color: #fff; border: none; padding: 10px 18px; border-radius: 20px; font-size: 13px; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            padding-bottom: 70px; /* Space for bottom nav */
+        }
+        /* Header Styling */
+        .header {
+            background-color: #fff;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+        }
+        .profile-btn {
+            background-color: #5c112b;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .account-badge {
+            background-color: #fbebf0;
+            color: #5c112b;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .wallet-badge {
+            background-color: #fbebf0;
+            color: #d89614;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        /* Cart Container */
+        .cart-container {
+            padding: 15px;
+        }
+        .cart-title {
+            color: #5c112b;
+            margin: 0 0 15px 0;
+            font-size: 22px;
+        }
+        .address-box {
+            background: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .product-card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            gap: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .product-img {
+            width: 80px;
+            height: 80px;
+            background: #eee;
+            border-radius: 8px;
+        }
+        .price-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        /* Wallet Alert & Button */
+        .wallet-alert {
+            background: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .add-funds-btn {
+            background: #5c112b;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .proceed-btn {
+            background: #5c112b;
+            color: #fff;
+            width: 100%;
+            border: none;
+            padding: 15px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #fff;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            border-top: 1px solid #ddd;
+        }
+        .nav-item {
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+        }
+        .nav-item.active {
+            color: #5c112b;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Top Header -->
     <div class="header">
-        <div style="background:#60122e; color:#fff; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-weight:bold;">m</div>
-        <div class="badge-account">93117 17102 ✅</div>
-        <div style="font-weight:bold;">💰 ₹0</div>
+        <div class="profile-btn">m</div>
+        <div class="account-badge">93117 17102 ✅</div>
+        <div class="wallet-badge">💰 ₹0</div>
     </div>
 
-    <!-- Cart View Container -->
-    <div class="cart-box">
-        <h3 style="margin-top:0; color:#60122e;">My Cart</h3>
-        <p style="font-size: 14px;">📍 <b>Rakib</b> · 8695034962 <span style="background:#eef2f5; padding:2px 6px; border-radius:4px; font-size:11px;">HOME</span></p>
-        <p style="font-size: 12px; color: #666; margin-top:-5px;">Matacl chowk, Block F, Sanibajar caterpuri sec se23a, Gurugram...</p>
-        <hr style="border: 0; border-top: 1px solid #f0f0f0;">
-        
-        <div style="display: flex; gap: 12px; align-items: center; margin-top: 12px;">
-            <div style="background:#ddd; width:60px; height:60px; border-radius:8px;"></div>
+    <!-- Main Cart Content -->
+    <div class="cart-container">
+        <h2 class="cart-title">My Cart</h2>
+
+        <!-- Address Box -->
+        <div class="address-box">
+            <span style="color:#5c112b; font-weight:bold;">📍 Rakib</span> · <span style="background:#eef; color:#44a; padding:2px 8px; border-radius:10px; font-size:12px;">HOME</span>
+            <p style="color:#666; font-size:14px; margin-top:8px;">Matacl chowk, Block F, Sanibajar caterpuri sec se23a, Gurugram...</p>
+        </div>
+
+        <!-- Product Details -->
+        <div class="product-card">
+            <div class="product-img"></div>
             <div>
-                <p style="margin: 0; font-size: 14px; font-weight: bold;">Trending TWS Bluetooth Wireless Earbuds...</p>
-                <p style="margin: 4px 0; color: #60122e; font-weight: bold;">₹338 <del style="color: #999; font-size: 12px;">₹1,499</del></p>
+                <div style="font-weight:bold; color:#333;">Trending TWS Bluetooth Wireless Earbuds...</div>
+                <div style="color:#888; font-size:14px; margin-top:5px;">Size: Free Size</div>
+                <div class="price-box">
+                    <span style="font-size:18px; font-weight:bold; color:#5c112b;">₹338</span>
+                    <span style="text-decoration:line-through; color:#999;">₹1,499</span>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Wallet Shortfall Box -->
-    <div class="wallet-alert">
-        <div>
-            <span style="color: #60122e; font-size: 18px;">₹10</span>
-            <div style="font-size: 12px; color: #777; font-weight: normal;">needed in wallet</div>
+        <!-- Wallet Alert Box -->
+        <div class="wallet-alert">
+            <div>
+                <div style="font-size:18px; font-weight:bold; color:#5c112b;">₹10</div>
+                <div style="font-size:12px; color:#777;">needed in wallet</div>
+            </div>
+            <button class="add-funds-btn">+ Add Funds</button>
         </div>
-        <button class="btn-funds">+ Add Funds</button>
+
+        <!-- Checkout Button -->
+        <button class="proceed-btn" onclick="payNow()">Proceed to Pay (₹51)</button>
     </div>
 
-    <div style="margin-top: 20px;">
-        <button class="btn-checkout">Proceed to Pay (₹51)</button>
+    <!-- Bottom Navigation Bar -->
+    <div class="bottom-nav">
+        <div class="nav-item">🔍<br>Search</div>
+        <div class="nav-item active">🛒<br>Cart</div>
+        <div class="nav-item">📦<br>Orders</div>
+        <div class="nav-item">📍<br>Address</div>
+        <div class="nav-item">👤<br>Account</div>
     </div>
 
+    <!-- Logic Script -->
     <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand();
+        // Initialize Telegram WebApp setup
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Opens app in full screen automatically
+        tg.ready();
+
+        // Dummy function for Pay button (Will connect to main.py later)
+        function payNow() {
+            tg.showAlert("Backend API se connect ho raha hai... (₹51 Payment Request)");
+            // Yahan hum baad mein Python API ka link dalenge
+        }
     </script>
 </body>
 </html>
