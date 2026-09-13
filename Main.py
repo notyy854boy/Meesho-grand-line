@@ -11,17 +11,23 @@ from aiogram.filters import Command
 from motor.motor_asyncio import AsyncIOMotorClient
 import uvicorn
 
-# --- CONFIGURATION (Bas yahan apna naya token dalna hai) ---
-BOT_TOKEN = "8995479806:AAHW047HqtIdYrAq3UU8rgYHrN_tILkdBUo" 
+# --- CONFIGURATION ---
+BOT_TOKEN = "8995479806:AAHW047HqtIdYrAq3UU8rgYHrN_tILkdBUo"
 MONGO_URI = "mongodb+srv://rakib8802:rakib8802@cluster0.4kzny9o.mongodb.net/?appName=Cluster0"
-WEBAPP_URL = "https://meesho-grand-line.onrender.com"
+WEBAPP_URL = "https://main-py-owl7.onrender.com"  # YAHAN ASLI RENDER URL SET KAR DIYA HAI
 
 # --- INITIALIZATION ---
 app = FastAPI()
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware, 
+    allow_origins=["*"], 
+    allow_credentials=True, 
+    allow_methods=["*"], 
+    allow_headers=["*"]
+)
 
 client = AsyncIOMotorClient(MONGO_URI, tlsCAFile=certifi.where())
 db = client["meesho_bot_db"]
@@ -33,7 +39,6 @@ app.mount("/static", StaticFiles(directory="public"), name="static")
 # --- WEBHOOK & ROUTES ---
 @app.on_event("startup")
 async def on_startup():
-    # Yeh line Telegram ko batayegi ki message kahan bhejne hain
     webhook_url = f"{WEBAPP_URL}/webhook"
     await bot.set_webhook(url=webhook_url, drop_pending_updates=True)
 
@@ -66,7 +71,11 @@ async def start_cmd(message: types.Message):
         [InlineKeyboardButton(text="🛍 Open Shop", web_app=WebAppInfo(url=WEBAPP_URL))]
     ])
     
-    await message.answer("🛍 **Grand Line Store**\nYour system is now completely ONLINE!\nClick below to open your app.", reply_markup=keyboard, parse_mode="Markdown")
+    await message.answer(
+        "🛍 **Grand Line Store**\nYour system is now completely ONLINE!\nClick below to open your app.", 
+        reply_markup=keyboard, 
+        parse_mode="Markdown"
+    )
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
