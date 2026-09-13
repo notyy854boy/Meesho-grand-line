@@ -1,3 +1,4 @@
+import certifi
 import asyncio
 import os
 from datetime import datetime
