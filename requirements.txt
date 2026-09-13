@@ -1,7 +1,6 @@
 fastapi
 uvicorn
+aiogram>=3.0.0
 motor
-aiogram
-requests
 pydantic
-dnspython
+requests
