@@ -12,7 +12,7 @@ from pydantic import BaseModel
 import requests
 
 # Fully Configured Direct Credentials & Admin ID
-BOT_TOKEN = "8995479806:AAEWU0T7ClnI5KHlm9IRRC3zhcGPu82OMOk"
+BOT_TOKEN = "8995479806:AAHAtJlWgq7YdSlAg--tXpyLnnmijynlXw0"
 MONGO_URI = "mongodb+srv://rakib8802:rakib8802@cluster0.4kzmy9o.mongodb.net/?appName=Cluster0"
 MINI_APP_URL = "https://meesho-grand-line.onrender.com"
 ADMIN_ID = 6571947272  # Aapki Telegram Admin ID
