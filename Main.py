@@ -13,7 +13,7 @@ from pydantic import BaseModel
 import uvicorn
 
 # --- CONFIGURATION ---
-BOT_TOKEN = "6995479806:AAHAtjlwgq7YdSlAg--tXpyLnnniJynlXw0"
+BOT_TOKEN = "8995479806:AAHW047HqtIdYrAq3UU8rgYHrN_tILkdBUo"
 MONGO_URI = "mongodb+srv://rakib8802:rakib8802@cluster0.4kzny9o.mongodb.net/?appName=Cluster0"
 WEBAPP_URL = "https://meesho-grand-line.onrender.com"
 
