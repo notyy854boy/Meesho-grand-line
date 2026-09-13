@@ -25,11 +25,15 @@ dp = Dispatcher()
 client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=5000)
 db = client["meesho_bot_db"]
 
-# Public folder setup for Mini App frontend
+# Public folder setup for Mini App frontend (Crash Fix Added)
 os.makedirs("public", exist_ok=True)
+if not os.path.exists("public/index.html"):
+    with open("public/index.html", "w") as f:
+        f.write("<h1>Mini App Frontend is Live!</h1><p>Apna real HTML code yahan daalein.</p>")
+
 app.mount("/static", StaticFiles(directory="public"), name="static")
 
-# Root route to serve Mini App frontend correctly (Fixes Not Found error)
+# Root route to serve Mini App frontend correctly
 @app.get("/")
 async def serve_frontend():
     return FileResponse("public/index.html")
@@ -44,7 +48,9 @@ class OrderRequest(BaseModel):
 @dp.message(Command("start"))
 async def start_cmd(message: types.Message):
     text = (
-        "🛍️ *Meesho Order Bot*\n_Your personal Meesho shopping concierge_\n\n💰 Wallet · ₹0.00\n👤 Accounts · 5 linked\n\n✨ Service fee — ₹10.00 per order\n\nPick an option below to get started 👇"
+        "🛍️ *Meesho Order Bot*\n_Your personal Meesho shopping concierge_\n\n"
+        "💰 Wallet · ₹0.00\n👤 Accounts · 5 linked\n\n"
+        "✨ Service fee — ₹10.00 per order\n\nPick an option below to get started 👇"
     )
 
     builder = InlineKeyboardBuilder()
@@ -54,12 +60,8 @@ async def start_cmd(message: types.Message):
         )
     )
     builder.row(
-        types.InlineKeyboardButton(
-            text="➕ Add Account", callback_data="add_account"
-        ),
-        types.InlineKeyboardButton(
-            text="👥 My Accounts", callback_data="my_accounts"
-        ),
+        types.InlineKeyboardButton(text="➕ Add Account", callback_data="add_account"),
+        types.InlineKeyboardButton(text="👥 My Accounts", callback_data="my_accounts"),
     )
     builder.row(
         types.InlineKeyboardButton(text="💳 Add Funds", callback_data="add_funds"),
@@ -80,7 +82,8 @@ def trigger_meesho_preorder(user_cookie: str, order_payload: dict):
         "origin": "https://www.meesho.com",
         "referer": "https://www.meesho.com/mcheckout/payment?source=cart-icon",
         "user-agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         ),
     }
 
@@ -104,7 +107,7 @@ async def place_order(data: OrderRequest):
         users_col = db["users"]
         orders_col = db["orders"]
 
-        # 1. Check User Wallet Balance (Order Total + ₹10 Service Fee)
+        # 1. Check User Wallet Balance
         user = await users_col.find_one({"telegram_id": data.telegram_id})
         service_fee = 10.0
         total_required = data.order_total + service_fee
@@ -116,7 +119,7 @@ async def place_order(data: OrderRequest):
                 "message": f"₹{total_required - user_balance} needed in wallet",
             }
 
-        # 2. Trigger Real Meesho Preorder API
+        # 2. Trigger Real Meesho API
         meesho_response = await asyncio.to_thread(
             trigger_meesho_preorder, data.user_cookie, data.order_payload
         )
@@ -128,7 +131,7 @@ async def place_order(data: OrderRequest):
                 "details": meesho_response,
             }
 
-        # 3. Deduct Wallet Balance after successful order hit
+        # 3. Deduct Wallet Balance
         new_balance = user_balance - total_required
         await users_col.update_one(
             {"telegram_id": data.telegram_id},
@@ -136,7 +139,7 @@ async def place_order(data: OrderRequest):
             upsert=True,
         )
 
-        # 4. Save Order & Tracking Details in MongoDB
+        # 4. Save Order in Database
         order_doc = {
             "order_id": "OD" + str(datetime.now().strftime("%d%H%M%S")),
             "telegram_id": data.telegram_id,
@@ -160,7 +163,7 @@ async def place_order(data: OrderRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Background task to run Telegram Bot polling live
+# Background task to run Telegram Bot polling
 async def run_telegram_bot():
     print("Starting Telegram Bot Polling Live...")
     await dp.start_polling(bot)
@@ -179,3 +182,4 @@ async def startup_event():
 async def shutdown_event():
     client.close()
     await bot.session.close()
+    
