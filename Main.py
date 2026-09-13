@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 # --- CONFIGURATION ---
 # YAHAN APNA NAYA FRESH TOKEN DAALNA (Kyunki purana unauthorized ho gaya tha)
-BOT_TOKEN = "TUMHARA_NAYA_BOT_TOKEN_YAHAN_DALO" 
+BOT_TOKEN = "8995479806:AAHW047HqtIdYrAq3UU8rgYHrN_tILkdBUo" 
 MONGO_URI = "mongodb+srv://rakib8802:rakib8802@cluster0.4kzny9o.mongodb.net/?appName=Cluster0"
 WEBAPP_URL = "https://meesho-grand-line.onrender.com"
 
