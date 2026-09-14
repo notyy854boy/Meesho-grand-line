@@ -57,8 +57,10 @@ async def serve_frontend():
 async def ping_server():
     return {"status": "Success", "message": "Server is 100% active and running!"}
 
-@app.post("/webhook")
+@app.api_route("/webhook", methods=["GET", "POST", "HEAD"])
 async def webhook(request: Request):
+    if request.method in ["GET", "HEAD"]:
+        return {"status": "Webhook active"}
     try:
         json_data = await request.json()
         print("Incoming Telegram Update:", json_data)
@@ -120,4 +122,3 @@ async def checkout(data: CheckoutModel):
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
-    
