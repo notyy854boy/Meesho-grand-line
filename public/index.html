@@ -2,209 +2,250 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Grand Line Store</title>
-    <!-- Telegram WebApp Script -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meesho Aalu Store</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        :root {
+            --bg-color: #0b0b14;
+            --card-bg: #161625;
+            --accent-pink: #ff2e93;
+            --accent-gradient: linear-gradient(135deg, #ff2e93, #b92eff);
+            --text-main: #ffffff;
+            --text-muted: #8b8b9e;
+        }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #f5f5f5;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            padding-bottom: 70px; /* Space for bottom nav */
+            padding-bottom: 80px;
         }
-        /* Header Styling */
-        .header {
-            background-color: #fff;
-            padding: 15px;
+        header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #ddd;
+            padding: 15px 20px;
+            background: var(--card-bg);
+            border-bottom: 1px solid #22223b;
         }
-        .profile-btn {
-            background-color: #5c112b;
-            color: white;
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .brand-logo {
             width: 35px;
             height: 35px;
-            border-radius: 50%;
+            background: var(--accent-gradient);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
         }
-        .account-badge {
-            background-color: #fbebf0;
-            color: #5c112b;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        .wallet-badge {
-            background-color: #fbebf0;
-            color: #d89614;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        /* Cart Container */
-        .cart-container {
+        .container {
             padding: 15px;
         }
-        .cart-title {
-            color: #5c112b;
-            margin: 0 0 15px 0;
-            font-size: 22px;
+        .banner {
+            background: var(--accent-gradient);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(255, 46, 147, 0.3);
         }
-        .address-box {
-            background: #fff;
+        .banner h2 { margin: 0 0 10px 0; font-size: 22px; }
+        .btn-primary {
+            background: #ffffff;
+            color: #0b0b14;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 14px;
             padding: 15px;
-            border-radius: 12px;
             margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid #22223b;
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
         }
         .product-card {
-            background: #fff;
-            padding: 15px;
+            background: var(--card-bg);
             border-radius: 12px;
-            display: flex;
-            gap: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            padding: 10px;
+            border: 1px solid #22223b;
+            text-align: left;
         }
-        .product-img {
-            width: 80px;
-            height: 80px;
-            background: #eee;
+        .product-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
             border-radius: 8px;
         }
-        .price-box {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        /* Wallet Alert & Button */
-        .wallet-alert {
-            background: #fff;
-            padding: 15px;
-            border-radius: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .add-funds-btn {
-            background: #5c112b;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-        .proceed-btn {
-            background: #5c112b;
-            color: #fff;
-            width: 100%;
-            border: none;
-            padding: 15px;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: bold;
-            margin-top: 15px;
-        }
+        .price { font-size: 16px; font-weight: bold; color: #00ffcc; }
+        .old-price { text-decoration: line-through; color: var(--text-muted); font-size: 12px; margin-left: 5px; }
+        .discount-tag { color: var(--accent-pink); font-size: 12px; font-weight: bold; }
+        
         /* Bottom Navigation */
-        .bottom-nav {
+        nav.bottom-nav {
             position: fixed;
             bottom: 0;
+            left: 0;
             width: 100%;
-            background: #fff;
+            background: #11111d;
             display: flex;
             justify-content: space-around;
-            padding: 10px 0;
-            border-top: 1px solid #ddd;
+            padding: 12px 0;
+            border-top: 1px solid #22223b;
+            z-index: 1000;
         }
         .nav-item {
+            color: var(--text-muted);
             text-align: center;
-            color: #888;
-            font-size: 12px;
+            font-size: 11px;
+            cursor: pointer;
+            background: none;
+            border: none;
         }
         .nav-item.active {
-            color: #5c112b;
-            font-weight: bold;
+            color: var(--accent-pink);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            width: 85%;
+            max-width: 400px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #0b0b14;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: white;
+            margin: 10px 0;
+            box-sizing: border-box;
         }
     </style>
 </head>
 <body>
 
-    <!-- Top Header -->
-    <div class="header">
-        <div class="profile-btn">m</div>
-        <div class="account-badge">93117 17102 ✅</div>
-        <div class="wallet-badge">💰 ₹0</div>
-    </div>
+    <header>
+        <div class="brand">
+            <div class="brand-logo">🛍️</div>
+            <div>
+                <div style="font-weight: bold; font-size: 15px;">Meesho Aalu</div>
+                <div style="font-size: 11px; color: var(--text-muted);">BY @AALUPRO</div>
+            </div>
+        </div>
+        <div id="slot-status" style="background: #1f1f33; padding: 5px 12px; border-radius: 20px; font-size: 12px;">⚡ Active</div>
+    </header>
 
-    <!-- Main Cart Content -->
-    <div class="cart-container">
-        <h2 class="cart-title">My Cart</h2>
-
-        <!-- Address Box -->
-        <div class="address-box">
-            <span style="color:#5c112b; font-weight:bold;">📍 Rakib</span> · <span style="background:#eef; color:#44a; padding:2px 8px; border-radius:10px; font-size:12px;">HOME</span>
-            <p style="color:#666; font-size:14px; margin-top:8px;">Matacl chowk, Block F, Sanibajar caterpuri sec se23a, Gurugram...</p>
+    <div class="container" id="main-view">
+        <!-- Banner / First Order Discount -->
+        <div class="banner">
+            <h2>🎉 YOUR FIRST-ORDER DISCOUNT</h2>
+            <div style="font-size: 28px; font-weight: bold; margin: 5px 0;">₹180 OFF</div>
+            <p style="font-size: 13px; margin: 0;">Best available tier secured for new user!</p>
+            <button class="btn-primary" onclick="openLoginModal()">Sign in & Apply Discount</button>
         </div>
 
-        <!-- Product Details -->
-        <div class="product-card">
-            <div class="product-img"></div>
-            <div>
-                <div style="font-weight:bold; color:#333;">Trending TWS Bluetooth Wireless Earbuds...</div>
-                <div style="color:#888; font-size:14px; margin-top:5px;">Size: Free Size</div>
-                <div class="price-box">
-                    <span style="font-size:18px; font-weight:bold; color:#5c112b;">₹338</span>
-                    <span style="text-decoration:line-through; color:#999;">₹1,499</span>
+        <!-- Products Section -->
+        <h3>Trending Deals</h3>
+        <div class="product-grid" id="product-list">
+            <div class="product-card">
+                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff" alt="Sneakers">
+                <div style="font-size: 13px; margin: 6px 0;">Men Stylish Sneakers</div>
+                <div>
+                    <span class="price">₹111</span>
+                    <span class="old-price">₹270</span>
                 </div>
+                <div class="discount-tag">₹168 off</div>
+                <button class="btn-primary" style="padding: 6px; font-size: 12px; margin-top: 8px;" onclick="placeOrder('Men Stylish Sneakers', 111)">Order Now</button>
+            </div>
+            <div class="product-card">
+                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30" alt="Watch">
+                <div style="font-size: 13px; margin: 6px 0;">Luxury Casual Watch</div>
+                <div>
+                    <span class="price">₹148</span>
+                    <span class="old-price">₹349</span>
+                </div>
+                <div class="discount-tag">₹201 off</div>
+                <button class="btn-primary" style="padding: 6px; font-size: 12px; margin-top: 8px;" onclick="placeOrder('Luxury Casual Watch', 148)">Order Now</button>
             </div>
         </div>
+    </div>
 
-        <!-- Wallet Alert Box -->
-        <div class="wallet-alert">
-            <div>
-                <div style="font-size:18px; font-weight:bold; color:#5c112b;">₹10</div>
-                <div style="font-size:12px; color:#777;">needed in wallet</div>
-            </div>
-            <button class="add-funds-btn">+ Add Funds</button>
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h3>Add Meesho Account</h3>
+            <p style="font-size: 13px; color: var(--text-muted);">Enter your 10-digit number to receive live OTP from Meesho.</p>
+            <input type="tel" id="phoneInput" placeholder="Enter 10-digit mobile number" maxlength="10">
+            <button class="btn-primary" onclick="sendOtp()">Send OTP</button>
+            <button style="background:none; border:none; color:var(--text-muted); margin-top:15px; cursor:pointer;" onclick="closeLoginModal()">Cancel</button>
         </div>
-
-        <!-- Checkout Button -->
-        <button class="proceed-btn" onclick="payNow()">Proceed to Pay (₹51)</button>
     </div>
 
-    <!-- Bottom Navigation Bar -->
-    <div class="bottom-nav">
-        <div class="nav-item">🔍<br>Search</div>
-        <div class="nav-item active">🛒<br>Cart</div>
-        <div class="nav-item">📦<br>Orders</div>
-        <div class="nav-item">📍<br>Address</div>
-        <div class="nav-item">👤<br>Account</div>
-    </div>
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('home')">🏠<br>Home</button>
+        <button class="nav-item" onclick="switchTab('search')">🔍<br>Search</button>
+        <button class="nav-item" onclick="switchTab('orders')">📦<br>Orders</button>
+        <button class="nav-item" onclick="switchTab('address')">📍<br>Address</button>
+        <button class="nav-item" onclick="switchTab('account')">👤<br>Account</button>
+    </nav>
 
-    <!-- Logic Script -->
     <script>
-        // Initialize Telegram WebApp setup
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Opens app in full screen automatically
-        tg.ready();
+        tg.expand();
 
-        // Dummy function for Pay button (Will connect to main.py later)
-        function payNow() {
-            tg.showAlert("Backend API se connect ho raha hai... (₹51 Payment Request)");
-            // Yahan hum baad mein Python API ka link dalenge
+        function openLoginModal() {
+            document.getElementById('loginModal').style.display = 'flex';
+        }
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+        }
+        function sendOtp() {
+            const phone = document.getElementById('phoneInput').value;
+            if(phone.length === 10) {
+                alert("OTP sent successfully to +91 " + phone);
+                closeLoginModal();
+            } else {
+                alert("Please enter a valid 10-digit number");
+            }
+        }
+        function placeOrder(item, price) {
+            alert(`Order placed successfully for ${item} at ₹${price} with max ₹180 discount applied!`);
+        }
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
         }
     </script>
 </body>
