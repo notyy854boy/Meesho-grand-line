@@ -2,7 +2,7 @@ import certifi
 import os
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
@@ -34,6 +34,7 @@ client = AsyncIOMotorClient(MONGO_URI, tlsCAFile=certifi.where())
 db = client["meesho_bot_db"]
 users_collection = db["users"]
 orders_collection = db["orders"]
+accounts_collection = db["accounts"]
 
 # --- STATIC FILES SETUP ---
 os.makedirs("public", exist_ok=True)
@@ -71,12 +72,11 @@ async def bot_webhook(request: Request):
         print(f"Webhook processing error: {e}")
     return {"ok": True}
 
-# --- TELEGRAM HANDLERS ---
+# --- TELEGRAM BOT HANDLERS ---
 @dp.message(Command("start"))
 async def start_cmd(message: types.Message):
     user_id = str(message.from_user.id)
     
-    # Check or create user in MongoDB
     user = await users_collection.find_one({"user_id": user_id})
     if not user:
         await users_collection.insert_one({
@@ -94,6 +94,45 @@ async def start_cmd(message: types.Message):
         reply_markup=keyboard,
         parse_mode="Markdown"
     )
+
+# --- API ROUTES (Matched with Frontend Video Network Payload) ---
+
+@app.get("/api/accounts")
+async def get_accounts(phone: str = None):
+    # Video ke network payload ke mutabiq accounts fetch karne ka route
+    if phone:
+        account = await accounts_collection.find_one({"phone": phone})
+        return {"ok": True, "account": account}
+    accounts = await accounts_collection.find().to_list(100)
+    return {"ok": True, "accounts": accounts}
+
+@app.get("/api/suggest")
+async def suggest_products(q: str = ""):
+    # Search suggestions route seen in network logs
+    suggestions = ["short kurtis", "shirt for men", "shoes", "t-shirts", "kurti combo"]
+    filtered = [s for s in suggestions if q.lower() in s.lower()] if q else suggestions
+    return {"ok": True, "suggestions": filtered}
+
+class CheckoutRequest(BaseModel):
+    phone: str
+    items: list
+    address_id: str = None
+
+@app.post("/api/checkout")
+async def checkout_order(data: CheckoutRequest):
+    # Order checkout payload handler from video network inspection
+    order_doc = {
+        "phone": data.phone,
+        "items": data.items,
+        "address_id": data.address_id,
+        "status": "Pending"
+    }
+    result = await orders_collection.insert_one(order_doc)
+    return {
+        "ok": True,
+        "message": "Order placed successfully",
+        "order_id": str(result.inserted_id)
+    }
 
 # --- APP RUNNER ---
 if __name__ == "__main__":
