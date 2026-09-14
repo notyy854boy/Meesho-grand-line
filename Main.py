@@ -29,59 +29,54 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- MONGODB SETUP ---
+# --- DATABASE SETUP ---
 client = AsyncIOMotorClient(MONGO_URI, tlsCAFile=certifi.where())
 db = client["meesho_bot_db"]
 users_collection = db["users"]
 orders_collection = db["orders"]
 accounts_collection = db["accounts"]
 
-# --- STATIC FILES SETUP ---
+# --- STATIC FILES ---
 os.makedirs("public", exist_ok=True)
 app.mount("/static", StaticFiles(directory="public"), name="static")
 
+@app.on_event("startup")
+async def on_startup():
+    try:
+        webhook_url = f"{WEBAPP_URL}/webhook"
+        await bot.set_webhook(url=webhook_url, drop_pending_updates=True)
+        print(f"Webhook set successfully to: {webhook_url}")
+    except Exception as e:
+        print(f"Webhook startup error: {e}")
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    await bot.session.close()
+
+# --- ROUTES ---
 @app.get("/")
 async def serve_frontend():
     return FileResponse("public/index.html")
 
 @app.get("/ping")
 async def ping_server():
-    return {"status": "Success", "message": "Server is fully active and running!"}
-
-# --- TELEGRAM WEBHOOK SETUP & DEBUGGING ---
-@app.on_event("startup")
-async def startup_event():
-    try:
-        webhook_url = f"{WEBAPP_URL}/webhook"
-        await bot.set_webhook(url=webhook_url, drop_pending_updates=True)
-        
-        # Yeh line Render logs mein batayegi ki Telegram webhook status kya hai
-        webhook_info = await bot.get_webhook_info()
-        print(f"=== TELEGRAM WEBHOOK INFO ===")
-        print(webhook_info)
-    except Exception as e:
-        print(f"Webhook setup error: {e}")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    await bot.session.close()
+    return {"status": "Success", "message": "Server is 100% active and running!"}
 
 @app.post("/webhook")
-async def bot_webhook(request: Request):
+async def webhook(request: Request):
     try:
-        data = await request.json()
-        print(f"Incoming Telegram Update: {data}") # Yeh print batayega ki Telegram se message aa raha hai ya nahi
-        update = types.Update.model_validate(data, context={"bot": bot})
+        json_data = await request.json()
+        print(f"Received Telegram payload: {json_data}")
+        update = types.Update.model_validate(json_data, context={"bot": bot})
         await dp.feed_update(bot, update)
     except Exception as e:
-        print(f"Webhook processing error: {e}")
+        print(f"Webhook error: {e}")
     return {"ok": True}
 
-# --- TELEGRAM BOT HANDLERS ---
+# --- TELEGRAM BOT LOGIC ---
 @dp.message(Command("start"))
-async def start_cmd(message: types.Message):
+async def start_handler(message: types.Message):
     user_id = str(message.from_user.id)
-    
     user = await users_collection.find_one({"user_id": user_id})
     if not user:
         await users_collection.insert_one({
@@ -91,16 +86,15 @@ async def start_cmd(message: types.Message):
         })
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🛍 Open Shop", web_app=WebAppInfo(url=WEBAPP_URL))]
+        [InlineKeyboardButton(text="Open Shop", web_app=WebAppInfo(url=WEBAPP_URL))]
     ])
     
     await message.answer(
-        "🛍 **Grand Line Store**\n\nYour account is linked successfully.\nClick below to open your shopping dashboard:",
-        reply_markup=keyboard,
-        parse_mode="Markdown"
+        "Grand Line Store\n\nYour system is completely online and active!\nClick below to open your store app.",
+        reply_markup=keyboard
     )
 
-# --- API ROUTES ---
+# --- API ENDPOINTS FOR FRONTEND ---
 @app.get("/api/accounts")
 async def get_accounts(phone: str = None):
     if phone:
@@ -111,29 +105,26 @@ async def get_accounts(phone: str = None):
 
 @app.get("/api/suggest")
 async def suggest_products(q: str = ""):
-    suggestions = ["short kurtis", "shirt for men", "shoes", "t-shirts", "kurti combo"]
+    suggestions = ["kurti", "t-shirt", "shoes", "shirt", "watch"]
     filtered = [s for s in suggestions if q.lower() in s.lower()] if q else suggestions
     return {"ok": True, "suggestions": filtered}
 
-class CheckoutRequest(BaseModel):
+class CheckoutModel(BaseModel):
     phone: str
     items: list
     address_id: str = None
 
 @app.post("/api/checkout")
-async def checkout_order(data: CheckoutRequest):
-    order_doc = {
+async def checkout(data: CheckoutModel):
+    doc = {
         "phone": data.phone,
         "items": data.items,
         "address_id": data.address_id,
         "status": "Pending"
     }
-    result = await orders_collection.insert_one(order_doc)
-    return {
-        "ok": True,
-        "message": "Order placed successfully",
-        "order_id": str(result.inserted_id)
-    }
+    res = await orders_collection.insert_one(doc)
+    return {"ok": True, "message": "Order placed successfully", "order_id": str(res.inserted_id)}
 
 if __name__ == "__main__":
     uvicorn.run("Main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+    
