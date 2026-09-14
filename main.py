@@ -1,5 +1,6 @@
 import certifi
 import os
+import httpx
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -40,8 +41,10 @@ app.mount("/static", StaticFiles(directory="public"), name="static")
 async def on_startup():
     try:
         webhook_url = f"{WEBAPP_URL}/webhook"
-        await bot.set_webhook(url=webhook_url, drop_pending_updates=True)
-        print(f"Webhook successfully set to: {webhook_url}")
+        telegram_api = f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook?url={webhook_url}"
+        async with httpx.AsyncClient() as client_http:
+            response = await client_http.get(telegram_api)
+            print("Webhook Auto-Setup Response:", response.text)
     except Exception as e:
         print(f"Startup webhook error: {e}")
 
