@@ -4,3 +4,4 @@ aiogram
 motor
 certifi
 pydantic
+httpx
