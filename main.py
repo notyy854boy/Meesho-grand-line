@@ -11,12 +11,10 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import uvicorn
 from pydantic import BaseModel
 
-# --- CONFIGURATION ---
 BOT_TOKEN = "8995479806:AAHW047HqtIdYrAq3UU8rgYHrN_tILkdBUo"
 MONGO_URI = "mongodb+srv://rakib8802:rakib8802@cluster0.4kzny9o.mongodb.net/?appName=Cluster0"
 WEBAPP_URL = "https://main-py-owl7.onrender.com"
 
-# --- INITIALIZATION ---
 app = FastAPI()
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -29,14 +27,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- DATABASE SETUP ---
 client = AsyncIOMotorClient(MONGO_URI, tlsCAFile=certifi.where())
 db = client["meesho_bot_db"]
 users_collection = db["users"]
 orders_collection = db["orders"]
 accounts_collection = db["accounts"]
 
-# --- STATIC FILES ---
 os.makedirs("public", exist_ok=True)
 app.mount("/static", StaticFiles(directory="public"), name="static")
 
@@ -45,15 +41,14 @@ async def on_startup():
     try:
         webhook_url = f"{WEBAPP_URL}/webhook"
         await bot.set_webhook(url=webhook_url, drop_pending_updates=True)
-        print(f"Webhook set successfully to: {webhook_url}")
+        print(f"Webhook successfully set to: {webhook_url}")
     except Exception as e:
-        print(f"Webhook startup error: {e}")
+        print(f"Startup webhook error: {e}")
 
 @app.on_event("shutdown")
 async def on_shutdown():
     await bot.session.close()
 
-# --- ROUTES ---
 @app.get("/")
 async def serve_frontend():
     return FileResponse("public/index.html")
@@ -66,14 +61,13 @@ async def ping_server():
 async def webhook(request: Request):
     try:
         json_data = await request.json()
-        print(f"Received Telegram payload: {json_data}")
-        update = types.Update.model_validate(json_data, context={"bot": bot})
+        print("Incoming Telegram Update:", json_data)
+        update = types.Update.model_validate(json_data)
         await dp.feed_update(bot, update)
     except Exception as e:
-        print(f"Webhook error: {e}")
+        print(f"Webhook Execution Error: {e}")
     return {"ok": True}
 
-# --- TELEGRAM BOT LOGIC ---
 @dp.message(Command("start"))
 async def start_handler(message: types.Message):
     user_id = str(message.from_user.id)
@@ -90,11 +84,10 @@ async def start_handler(message: types.Message):
     ])
     
     await message.answer(
-        "Grand Line Store\n\nYour system is completely online and active!\nClick below to open your store app.",
+        "Grand Line Store\n\nYour system is completely online!\nClick below to open your store app.",
         reply_markup=keyboard
     )
 
-# --- API ENDPOINTS FOR FRONTEND ---
 @app.get("/api/accounts")
 async def get_accounts(phone: str = None):
     if phone:
@@ -126,5 +119,5 @@ async def checkout(data: CheckoutModel):
     return {"ok": True, "message": "Order placed successfully", "order_id": str(res.inserted_id)}
 
 if __name__ == "__main__":
-    uvicorn.run("Main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
     
