@@ -18,139 +18,46 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            padding-bottom: 80px;
+            margin: 0; padding: 0; padding-bottom: 80px;
         }
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            background: var(--card-bg);
-            border-bottom: 1px solid #22223b;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; background: var(--card-bg); border-bottom: 1px solid #22223b;
         }
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .brand { display: flex; align-items: center; gap: 10px; }
         .brand-logo {
-            width: 35px;
-            height: 35px;
-            background: var(--accent-gradient);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
+            width: 35px; height: 35px; background: var(--accent-gradient);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold;
         }
-        .container {
-            padding: 15px;
-        }
+        .container { padding: 15px; }
         .banner {
-            background: var(--accent-gradient);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 20px rgba(255, 46, 147, 0.3);
+            background: var(--accent-gradient); border-radius: 16px; padding: 20px;
+            text-align: center; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(255, 46, 147, 0.3);
         }
-        .banner h2 { margin: 0 0 10px 0; font-size: 22px; }
+        .banner h2 { margin: 0 0 10px 0; font-size: 20px; }
         .btn-primary {
-            background: #ffffff;
-            color: #0b0b14;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 30px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            font-size: 16px;
-            margin-top: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            background: #ffffff; color: #0b0b14; border: none; padding: 12px 25px;
+            border-radius: 30px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-top: 10px;
         }
-        .card {
-            background: var(--card-bg);
-            border-radius: 14px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #22223b;
-        }
-        .product-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        .product-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 10px;
-            border: 1px solid #22223b;
-            text-align: left;
-        }
-        .product-card img {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
+        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .product-card { background: var(--card-bg); border-radius: 12px; padding: 10px; border: 1px solid #22223b; }
+        .product-card img { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; }
         .price { font-size: 16px; font-weight: bold; color: #00ffcc; }
         .old-price { text-decoration: line-through; color: var(--text-muted); font-size: 12px; margin-left: 5px; }
         .discount-tag { color: var(--accent-pink); font-size: 12px; font-weight: bold; }
         
-        /* Bottom Navigation */
         nav.bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: #11111d;
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0;
-            border-top: 1px solid #22223b;
-            z-index: 1000;
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #11111d;
+            display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #22223b; z-index: 1000;
         }
-        .nav-item {
-            color: var(--text-muted);
-            text-align: center;
-            font-size: 11px;
-            cursor: pointer;
-            background: none;
-            border: none;
-        }
-        .nav-item.active {
-            color: var(--accent-pink);
-        }
+        .nav-item { color: var(--text-muted); text-align: center; font-size: 11px; cursor: pointer; background: none; border: none; }
+        .nav-item.active { color: var(--accent-pink); }
         .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 2000;
         }
-        .modal-content {
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 16px;
-            width: 85%;
-            max-width: 400px;
-            border: 1px solid #333;
-            text-align: center;
-        }
-        input {
-            width: 100%;
-            padding: 12px;
-            background: #0b0b14;
-            border: 1px solid #333;
-            border-radius: 8px;
-            color: white;
-            margin: 10px 0;
-            box-sizing: border-box;
-        }
+        .modal-content { background: var(--card-bg); padding: 25px; border-radius: 16px; width: 85%; max-width: 400px; border: 1px solid #333; text-align: center; }
+        input { width: 100%; padding: 12px; background: #0b0b14; border: 1px solid #333; border-radius: 8px; color: white; margin: 10px 0; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -163,89 +70,87 @@
                 <div style="font-size: 11px; color: var(--text-muted);">BY @AALUPRO</div>
             </div>
         </div>
-        <div id="slot-status" style="background: #1f1f33; padding: 5px 12px; border-radius: 20px; font-size: 12px;">⚡ Active</div>
+        <div style="background: #1f1f33; padding: 5px 12px; border-radius: 20px; font-size: 12px;">⚡ Active</div>
     </header>
 
-    <div class="container" id="main-view">
-        <!-- Banner / First Order Discount -->
+    <div class="container">
         <div class="banner">
-            <h2>🎉 YOUR FIRST-ORDER DISCOUNT</h2>
-            <div style="font-size: 28px; font-weight: bold; margin: 5px 0;">₹180 OFF</div>
-            <p style="font-size: 13px; margin: 0;">Best available tier secured for new user!</p>
-            <button class="btn-primary" onclick="openLoginModal()">Sign in & Apply Discount</button>
+            <h2>🎉 NEW USER DISCOUNT</h2>
+            <div style="font-size: 26px; font-weight: bold; margin: 5px 0;">₹190 OFF</div>
+            <p style="font-size: 13px; margin: 0;">Applied automatically on your first order!</p>
+            <button class="btn-primary" onclick="openLoginModal()">Sign in / Link Account</button>
         </div>
 
-        <!-- Products Section -->
         <h3>Trending Deals</h3>
-        <div class="product-grid" id="product-list">
+        <div class="product-grid">
             <div class="product-card">
                 <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff" alt="Sneakers">
-                <div style="font-size: 13px; margin: 6px 0;">Men Stylish Sneakers</div>
-                <div>
-                    <span class="price">₹111</span>
-                    <span class="old-price">₹270</span>
-                </div>
-                <div class="discount-tag">₹168 off</div>
-                <button class="btn-primary" style="padding: 6px; font-size: 12px; margin-top: 8px;" onclick="placeOrder('Men Stylish Sneakers', 111)">Order Now</button>
+                <div style="font-size: 13px; margin: 6px 0;">Men Sneakers</div>
+                <div><span class="price">₹111</span><span class="old-price">₹300</span></div>
+                <div class="discount-tag">₹190 off</div>
+                <button class="btn-primary" style="padding: 6px; font-size: 12px; margin-top: 8px;" onclick="addToCart('Men Sneakers', 301)">Add to Cart</button>
             </div>
             <div class="product-card">
                 <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30" alt="Watch">
-                <div style="font-size: 13px; margin: 6px 0;">Luxury Casual Watch</div>
-                <div>
-                    <span class="price">₹148</span>
-                    <span class="old-price">₹349</span>
-                </div>
-                <div class="discount-tag">₹201 off</div>
-                <button class="btn-primary" style="padding: 6px; font-size: 12px; margin-top: 8px;" onclick="placeOrder('Luxury Casual Watch', 148)">Order Now</button>
+                <div style="font-size: 13px; margin: 6px 0;">Casual Watch</div>
+                <div><span class="price">₹150</span><span class="old-price">₹340</span></div>
+                <div class="discount-tag">₹190 off</div>
+                <button class="btn-primary" style="padding: 6px; font-size: 12px; margin-top: 8px;" onclick="addToCart('Casual Watch', 340)">Add to Cart</button>
             </div>
         </div>
     </div>
 
-    <!-- Login Modal -->
     <div class="modal" id="loginModal">
         <div class="modal-content">
-            <h3>Add Meesho Account</h3>
-            <p style="font-size: 13px; color: var(--text-muted);">Enter your 10-digit number to receive live OTP from Meesho.</p>
+            <h3>Link Meesho Account</h3>
             <input type="tel" id="phoneInput" placeholder="Enter 10-digit mobile number" maxlength="10">
             <button class="btn-primary" onclick="sendOtp()">Send OTP</button>
-            <button style="background:none; border:none; color:var(--text-muted); margin-top:15px; cursor:pointer;" onclick="closeLoginModal()">Cancel</button>
+            <button style="background:none; border:none; color:var(--text-muted); margin-top:15px; cursor:pointer;" onclick="closeLoginModal()">Close</button>
         </div>
     </div>
 
-    <!-- Bottom Nav -->
     <nav class="bottom-nav">
-        <button class="nav-item active" onclick="switchTab('home')">🏠<br>Home</button>
-        <button class="nav-item" onclick="switchTab('search')">🔍<br>Search</button>
-        <button class="nav-item" onclick="switchTab('orders')">📦<br>Orders</button>
-        <button class="nav-item" onclick="switchTab('address')">📍<br>Address</button>
-        <button class="nav-item" onclick="switchTab('account')">👤<br>Account</button>
+        <button class="nav-item active">🏠<br>Home</button>
+        <button class="nav-item">🔍<br>Search</button>
+        <button class="nav-item">📦<br>Orders</button>
+        <button class="nav-item">📍<br>Address</button>
+        <button class="nav-item">👤<br>Account</button>
     </nav>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        const userId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : "test_user_123";
 
-        function openLoginModal() {
-            document.getElementById('loginModal').style.display = 'flex';
-        }
-        function closeLoginModal() {
-            document.getElementById('loginModal').style.display = 'none';
-        }
-        function sendOtp() {
+        function openLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
+        function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
+
+        async function sendOtp() {
             const phone = document.getElementById('phoneInput').value;
-            if(phone.length === 10) {
-                alert("OTP sent successfully to +91 " + phone);
+            if(phone.length !== 10) { alert("Enter valid 10 digit number"); return; }
+            
+            const res = await fetch('/api/auth/send-otp', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ phone })
+            });
+            const data = await res.json();
+            if(data.ok) {
+                alert("OTP triggered successfully!");
                 closeLoginModal();
-            } else {
-                alert("Please enter a valid 10-digit number");
             }
         }
-        function placeOrder(item, price) {
-            alert(`Order placed successfully for ${item} at ₹${price} with max ₹180 discount applied!`);
-        }
-        function switchTab(tab) {
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+
+        async function addToCart(product_name, price) {
+            const res = await fetch('/api/cart/add', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user_id: userId, product_name, price })
+            });
+            const data = await res.json();
+            if(data.ok) {
+                alert(product_name + " added to cart successfully! ₹190 new user discount will apply at checkout.");
+            }
         }
     </script>
 </body>
