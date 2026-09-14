@@ -1,8 +1,8 @@
 import certifi
 import os
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
@@ -48,13 +48,17 @@ async def serve_frontend():
 async def ping_server():
     return {"status": "Success", "message": "Server is fully active and running!"}
 
-# --- TELEGRAM WEBHOOK ENDPOINT ---
+# --- TELEGRAM WEBHOOK SETUP & DEBUGGING ---
 @app.on_event("startup")
 async def startup_event():
     try:
-        await bot.delete_webhook(drop_pending_updates=True)
         webhook_url = f"{WEBAPP_URL}/webhook"
-        await bot.set_webhook(url=webhook_url)
+        await bot.set_webhook(url=webhook_url, drop_pending_updates=True)
+        
+        # Yeh line Render logs mein batayegi ki Telegram webhook status kya hai
+        webhook_info = await bot.get_webhook_info()
+        print(f"=== TELEGRAM WEBHOOK INFO ===")
+        print(webhook_info)
     except Exception as e:
         print(f"Webhook setup error: {e}")
 
@@ -66,6 +70,7 @@ async def shutdown_event():
 async def bot_webhook(request: Request):
     try:
         data = await request.json()
+        print(f"Incoming Telegram Update: {data}") # Yeh print batayega ki Telegram se message aa raha hai ya nahi
         update = types.Update.model_validate(data, context={"bot": bot})
         await dp.feed_update(bot, update)
     except Exception as e:
@@ -95,11 +100,9 @@ async def start_cmd(message: types.Message):
         parse_mode="Markdown"
     )
 
-# --- API ROUTES (Matched with Frontend Video Network Payload) ---
-
+# --- API ROUTES ---
 @app.get("/api/accounts")
 async def get_accounts(phone: str = None):
-    # Video ke network payload ke mutabiq accounts fetch karne ka route
     if phone:
         account = await accounts_collection.find_one({"phone": phone})
         return {"ok": True, "account": account}
@@ -108,7 +111,6 @@ async def get_accounts(phone: str = None):
 
 @app.get("/api/suggest")
 async def suggest_products(q: str = ""):
-    # Search suggestions route seen in network logs
     suggestions = ["short kurtis", "shirt for men", "shoes", "t-shirts", "kurti combo"]
     filtered = [s for s in suggestions if q.lower() in s.lower()] if q else suggestions
     return {"ok": True, "suggestions": filtered}
@@ -120,7 +122,6 @@ class CheckoutRequest(BaseModel):
 
 @app.post("/api/checkout")
 async def checkout_order(data: CheckoutRequest):
-    # Order checkout payload handler from video network inspection
     order_doc = {
         "phone": data.phone,
         "items": data.items,
@@ -134,6 +135,5 @@ async def checkout_order(data: CheckoutRequest):
         "order_id": str(result.inserted_id)
     }
 
-# --- APP RUNNER ---
 if __name__ == "__main__":
     uvicorn.run("Main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
