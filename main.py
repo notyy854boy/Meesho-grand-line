@@ -18,7 +18,7 @@ ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 
 # 🔥 DIRECT SUPABASE KEYS 🔥
 SUPABASE_URL = "https://sdlfggybitpoxczdeihq.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbGZnZ3liaXRwb3hjemRlaWhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExMjIwMTksImV4cCI6MjEwNjY5ODAxOX0.EGG5Co2V8GACskfuLu-BO1mR2_67IhzC5EU1P5wSxcc"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbGZnZ3liaXRwb3hjemRlaWhxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTEyMjAxOSwiZXhwIjoyMTA2Njk4MDE5fQ.-qa5c60tZf1viwGhQpYqiGq0vv0Fy9IfIbK7quID838"
 SUPABASE_BUCKET = "quant-lake"
 
 # --- INITIALIZATION ---
