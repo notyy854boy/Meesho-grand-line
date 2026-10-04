@@ -3,260 +3,274 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>BADA BHAI APEX 2026</title>
+  <title>BADA BHAI APEX QUANT</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap');
     body { font-family: 'JetBrains Mono', monospace; background-color: #050505; color: #e5e7eb; overflow: hidden; }
-    .glass { background: rgba(10, 15, 20, 0.95); border: 1px solid #1f2937; }
-    .neon-text { text-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-track { background: #000; }
-    ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
-    
-    /* Dynamic colored badges */
-    .badge-buy { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.5); }
-    .badge-sell { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.5); }
+    .glass { background: rgba(10, 15, 20, 0.95); border: 1px solid #1f2937; backdrop-filter: blur(10px); }
+    ::-webkit-scrollbar { display: none; }
+    .tab-hidden { display: none !important; }
+    .badge-buy { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-sell { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .exchange-tag { font-size: 8px; padding: 1px 4px; border-radius: 2px; margin-right: 4px; }
   </style>
 </head>
-<body class="h-screen w-screen flex flex-col">
+<body class="h-screen w-screen flex flex-col relative pb-16">
 
-  <!-- TOP HEADER -->
-  <header class="glass border-b border-gray-800 p-2 flex justify-between items-center z-50">
-    <div class="flex items-center gap-3">
-      <div class="w-3 h-3 bg-emerald-500 rounded-full animate-ping"></div>
-      <span class="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500 text-sm tracking-widest">
-        APEX QUANT V2
+  <!-- TOP HEADER (Always Visible) -->
+  <header class="glass border-b border-gray-800 p-3 flex justify-between items-center z-50 sticky top-0">
+    <div class="flex items-center gap-2">
+      <div class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
+      <span class="font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500 text-sm tracking-widest">
+        GOD ENGINE V3
       </span>
     </div>
-    <div class="flex gap-4 text-[10px] font-bold text-gray-500">
-      <span class="text-emerald-400">LATENCY: 12ms</span>
-      <span class="text-cyan-400">NETWORK: 1GBPS</span>
-      <span class="text-purple-400">AI ACCURACY: 98.7%</span>
+    <div class="text-[10px] font-bold text-gray-500 flex gap-3">
+      <span class="text-cyan-400" id="ml-score">ML: 98%</span>
+      <span class="text-emerald-400">PING: 8ms</span>
     </div>
   </header>
 
-  <!-- MAIN 3-PANEL GRID -->
-  <main class="flex-1 grid grid-cols-12 gap-2 p-2 overflow-hidden bg-black">
-    
-    <!-- PANEL 1: LEFT SIDEBAR (CRYPTO ASSETS SCREENER) -->
-    <aside class="col-span-3 glass rounded-lg flex flex-col overflow-hidden border-gray-800">
-      <div class="p-3 border-b border-gray-800 flex justify-between items-center">
-        <h2 class="text-xs font-bold text-gray-400">CRYPTO ASSETS</h2>
-        <span class="text-[10px] bg-gray-800 px-2 py-0.5 rounded">LIVE</span>
-      </div>
-      <div class="flex-1 overflow-y-auto p-2 space-y-2" id="asset-list">
-        <!-- Assets will be injected here via WebSocket -->
-      </div>
-    </aside>
-
-    <!-- PANEL 2: CENTER (AI DRAWING & CHART) -->
-    <section class="col-span-6 glass rounded-lg flex flex-col relative border-gray-800 overflow-hidden">
-      <!-- Top Action Bar -->
-      <div class="p-2 border-b border-gray-800 flex justify-between items-center bg-gray-900/50">
-        <div class="flex items-center gap-3">
-          <span id="active-coin-name" class="text-lg font-black text-white">BTCUSDT</span>
-          <span class="text-[10px] text-gray-400">15m Timeframe</span>
-        </div>
-        <div id="ai-status-badge" class="px-3 py-1 rounded text-xs font-bold badge-buy animate-pulse">
-          AI DETECTED: LONG SETUP
-        </div>
-      </div>
-      
-      <!-- Chart Container -->
-      <div id="chart-container" class="flex-1 w-full relative">
-        <!-- Floating Prediction Box Info -->
-        <div class="absolute top-4 right-4 z-10 glass p-3 rounded-lg border-gray-700 min-w-[150px] backdrop-blur-md">
-          <div class="text-[10px] text-gray-400 font-bold mb-2 uppercase border-b border-gray-800 pb-1">AI Position Tool</div>
-          <div class="flex justify-between text-xs mb-1"><span class="text-emerald-400">Target</span> <span id="ui-tp" class="font-bold text-white">--</span></div>
-          <div class="flex justify-between text-xs mb-1"><span class="text-gray-400">Entry</span> <span id="ui-entry" class="font-bold text-white">--</span></div>
-          <div class="flex justify-between text-xs"><span class="text-red-400">Stop</span> <span id="ui-sl" class="font-bold text-white">--</span></div>
-          <div class="mt-2 text-[10px] text-cyan-400 font-bold text-right" id="ui-rr">RR 1:4</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- PANEL 3: RIGHT (NEWS & VOICE MODULE) -->
-    <aside class="col-span-3 flex flex-col gap-2">
-      <!-- News Feed -->
-      <div class="glass rounded-lg flex-1 flex flex-col border-gray-800 overflow-hidden">
-        <div class="p-2 border-b border-gray-800 flex justify-between items-center">
-          <h2 class="text-xs font-bold text-gray-400">FINANCIAL NEWS FEED</h2>
-        </div>
-        <div class="flex-1 overflow-y-auto p-2 space-y-2">
-          <a href="#" class="block p-2 bg-gray-900/40 rounded border border-gray-800 hover:border-blue-500 transition">
-            <div class="text-[9px] text-blue-400 mb-1">CoinDesk • 2:33 PM</div>
-            <div class="text-xs text-gray-200 font-bold">BTC Price Analysis Bullish for $75K</div>
-          </a>
-          <a href="#" class="block p-2 bg-gray-900/40 rounded border border-gray-800 hover:border-blue-500 transition">
-            <div class="text-[9px] text-purple-400 mb-1">Bloomberg • 3:15 PM</div>
-            <div class="text-xs text-gray-200 font-bold">ETH Spot ETF Decisions Delayed</div>
-          </a>
-          <a href="#" class="block p-2 bg-gray-900/40 rounded border border-gray-800 hover:border-blue-500 transition">
-            <div class="text-[9px] text-emerald-400 mb-1">The Block • 4:10 PM</div>
-            <div class="text-xs text-gray-200 font-bold">Whale shifts $500M to Binance Spot</div>
-          </a>
-        </div>
-      </div>
-
-      <!-- AI Voice Assistant Panel -->
-      <div class="glass rounded-lg h-32 p-3 border-emerald-500/30 flex flex-col justify-center items-center relative overflow-hidden">
-        <div class="absolute inset-0 bg-emerald-900/10 animate-pulse"></div>
-        <div class="z-10 text-center w-full">
-          <div class="text-[10px] text-emerald-400 font-bold tracking-widest mb-2">AI VOICE ASSISTANT</div>
-          <!-- Fake Audio Waveform Graphic -->
-          <div class="flex items-center justify-center gap-1 h-8 mb-2">
-            <div class="w-1 bg-emerald-500 h-2 animate-[bounce_1s_infinite]"></div>
-            <div class="w-1 bg-emerald-400 h-6 animate-[bounce_1.2s_infinite]"></div>
-            <div class="w-1 bg-emerald-300 h-4 animate-[bounce_0.8s_infinite]"></div>
-            <div class="w-1 bg-cyan-400 h-8 animate-[bounce_1.1s_infinite]"></div>
-            <div class="w-1 bg-emerald-300 h-3 animate-[bounce_0.9s_infinite]"></div>
-            <div class="w-1 bg-emerald-400 h-5 animate-[bounce_1.3s_infinite]"></div>
-            <div class="w-1 bg-emerald-500 h-2 animate-[bounce_1s_infinite]"></div>
-          </div>
-          <button onclick="playVoice()" class="w-full bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500 text-emerald-300 text-xs py-1.5 rounded transition font-bold">
-            PLAY AUDIO BRIEF
-          </button>
-        </div>
-      </div>
-    </aside>
-
+  <!-- ========================================== -->
+  <!-- TAB 1: MARKETS (MULTI-EXCHANGE SCREENER) -->
+  <!-- ========================================== -->
+  <main id="tab-markets" class="flex-1 flex flex-col overflow-y-auto p-2 space-y-2">
+    <div class="p-2 flex justify-between items-center">
+      <h2 class="text-xs font-bold text-gray-400">GLOBAL LIQUIDITY SCANNER</h2>
+      <span class="text-[9px] bg-blue-900/40 text-blue-400 px-2 py-1 rounded">BINANCE + DELTA + COINDCX</span>
+    </div>
+    <div id="asset-list" class="space-y-2 pb-4">
+      <!-- Injected via WS -->
+    </div>
   </main>
 
+  <!-- ========================================== -->
+  <!-- TAB 2: AI PREDICTION (AUTO-CHART & DOM) -->
+  <!-- ========================================== -->
+  <main id="tab-prediction" class="flex-1 flex flex-col overflow-hidden tab-hidden relative">
+    
+    <!-- Pro Stats Bar -->
+    <div class="p-2 border-b border-gray-800 bg-gray-900/30 flex justify-between items-center shrink-0">
+      <div class="flex items-center gap-2">
+        <span id="active-coin-name" class="text-lg font-black text-white">BTCUSDT</span>
+        <span class="exchange-tag bg-yellow-500/20 text-yellow-500 border border-yellow-500/50">BINANCE</span>
+      </div>
+      <div id="ai-status-badge" class="px-2 py-1 rounded text-[10px] font-bold badge-buy animate-pulse">
+        SETUP: LONG
+      </div>
+    </div>
+
+    <!-- Advanced Quant Data Ribbon -->
+    <div class="grid grid-cols-3 gap-1 p-1 bg-black shrink-0 border-b border-gray-800 text-center">
+      <div class="glass p-1 rounded"><div class="text-[8px] text-gray-500">LIQUIDATION HEAT</div><div class="text-[10px] text-red-400 font-bold" id="ui-liq">HIGH (Shorts)</div></div>
+      <div class="glass p-1 rounded"><div class="text-[8px] text-gray-500">WHALE ACTIVITY</div><div class="text-[10px] text-emerald-400 font-bold" id="ui-whale">ACCUMULATING</div></div>
+      <div class="glass p-1 rounded"><div class="text-[8px] text-gray-500">ORDERBOOK DOM</div><div class="text-[10px] text-cyan-400 font-bold" id="ui-dom">BUY WALL 64K</div></div>
+    </div>
+    
+    <!-- Lightweight Chart Area -->
+    <div id="chart-container" class="flex-1 w-full bg-[#050505] relative">
+      <!-- Draggable/Floating Target Box -->
+      <div class="absolute bottom-4 left-2 z-10 glass p-2 rounded border-gray-700 min-w-[120px]">
+        <div class="text-[9px] text-gray-400 font-bold mb-1 border-b border-gray-800 pb-1">AI POSITION</div>
+        <div class="flex justify-between text-[10px] mb-1"><span class="text-emerald-400">TP</span> <span id="ui-tp" class="font-bold text-white">--</span></div>
+        <div class="flex justify-between text-[10px] mb-1"><span class="text-gray-400">ENT</span> <span id="ui-entry" class="font-bold text-white">--</span></div>
+        <div class="flex justify-between text-[10px]"><span class="text-red-400">SL</span> <span id="ui-sl" class="font-bold text-white">--</span></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- TAB 3: MACRO NEWS & SENTIMENT -->
+  <!-- ========================================== -->
+  <main id="tab-news" class="flex-1 flex flex-col overflow-y-auto p-2 space-y-2 tab-hidden">
+    <!-- Voice Command Box -->
+    <div class="glass rounded-lg p-4 flex flex-col items-center justify-center border-emerald-500/30 mb-2 relative overflow-hidden">
+      <div class="absolute inset-0 bg-emerald-900/10 animate-pulse"></div>
+      <div class="z-10 text-center w-full">
+        <div class="text-xs text-emerald-400 font-bold tracking-widest mb-2">BADA BHAI VOICE AGENT</div>
+        <button onclick="playVoice()" class="w-full bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500 text-emerald-300 text-xs py-3 rounded-lg font-bold">
+          🔊 PLAY SITUATION REPORT
+        </button>
+      </div>
+    </div>
+
+    <div class="p-2 flex justify-between items-center border-b border-gray-800">
+      <h2 class="text-xs font-bold text-gray-400">INSTITUTIONAL SENTIMENT</h2>
+      <span class="text-[9px] text-emerald-500">EXTREME GREED</span>
+    </div>
+
+    <!-- News List -->
+    <a href="#" class="block p-3 glass rounded border border-gray-800">
+      <div class="flex justify-between text-[10px] text-blue-400 mb-1"><span>Bloomberg Terminal</span><span>Live</span></div>
+      <div class="text-sm text-gray-200 font-bold">Delta Exchange options data shows massive call buying at $70k strike</div>
+    </a>
+    <a href="#" class="block p-3 glass rounded border border-gray-800">
+      <div class="flex justify-between text-[10px] text-purple-400 mb-1"><span>CoinGlass Liq Engine</span><span>2m ago</span></div>
+      <div class="text-sm text-gray-200 font-bold">$25M Shorts Liquidated across Binance & CoinDCX in 5 minutes</div>
+    </a>
+    <a href="#" class="block p-3 glass rounded border border-gray-800">
+      <div class="flex justify-between text-[10px] text-orange-400 mb-1"><span>On-Chain Alert</span><span>12m ago</span></div>
+      <div class="text-sm text-gray-200 font-bold">Dormant Whale wallet moves 15,000 BTC to unknown exchange</div>
+    </a>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- BOTTOM NAVIGATION BAR (APP STYLE) -->
+  <!-- ========================================== -->
+  <nav class="glass fixed bottom-0 w-full h-16 border-t border-gray-800 flex justify-around items-center z-50 px-2">
+    <button onclick="switchTab('markets')" id="btn-markets" class="flex flex-col items-center justify-center w-1/3 text-emerald-400 transition">
+      <span class="text-xl mb-1">📊</span>
+      <span class="text-[9px] font-bold tracking-wider">MARKETS</span>
+    </button>
+    
+    <button onclick="switchTab('prediction')" id="btn-prediction" class="flex flex-col items-center justify-center w-1/3 text-gray-500 hover:text-cyan-400 transition relative">
+      <!-- Glow effect for the main prediction button -->
+      <div class="absolute inset-0 bg-cyan-500/10 rounded-full blur-md opacity-0" id="glow-prediction"></div>
+      <span class="text-xl mb-1 relative z-10">🤖</span>
+      <span class="text-[9px] font-bold tracking-wider relative z-10">PREDICTION</span>
+    </button>
+    
+    <button onclick="switchTab('news')" id="btn-news" class="flex flex-col items-center justify-center w-1/3 text-gray-500 hover:text-purple-400 transition">
+      <span class="text-xl mb-1">📰</span>
+      <span class="text-[9px] font-bold tracking-wider">MACRO/NEWS</span>
+    </button>
+  </nav>
+
   <script>
-    // Expand Telegram Mini App
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.expand(); tg.setHeaderColor('#050505'); tg.setBackgroundColor('#050505'); }
 
-    // --- 1. SETUP LIGHTWEIGHT CHART ---
+    // --- NAVIGATION LOGIC ---
+    function switchTab(tabName) {
+      // Hide all tabs
+      document.getElementById('tab-markets').classList.add('tab-hidden');
+      document.getElementById('tab-prediction').classList.add('tab-hidden');
+      document.getElementById('tab-news').classList.add('tab-hidden');
+      
+      // Reset button colors
+      document.getElementById('btn-markets').className = "flex flex-col items-center justify-center w-1/3 text-gray-600 transition";
+      document.getElementById('btn-prediction').className = "flex flex-col items-center justify-center w-1/3 text-gray-600 transition relative";
+      document.getElementById('btn-news').className = "flex flex-col items-center justify-center w-1/3 text-gray-600 transition";
+      document.getElementById('glow-prediction').style.opacity = "0";
+
+      // Show selected tab & highlight button
+      document.getElementById('tab-' + tabName).classList.remove('tab-hidden');
+      
+      if(tabName === 'markets') document.getElementById('btn-markets').classList.add('text-emerald-400');
+      if(tabName === 'prediction') {
+        document.getElementById('btn-prediction').classList.add('text-cyan-400');
+        document.getElementById('glow-prediction').style.opacity = "1";
+        chart.resize(document.getElementById('chart-container').clientWidth, document.getElementById('chart-container').clientHeight);
+      }
+      if(tabName === 'news') document.getElementById('btn-news').classList.add('text-purple-400');
+    }
+
+    // --- CHARTING ENGINE ---
     const chartContainer = document.getElementById('chart-container');
     const chart = LightweightCharts.createChart(chartContainer, {
       layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#9ca3af' },
-      grid: { vertLines: { color: 'rgba(31, 41, 55, 0.4)' }, horzLines: { color: 'rgba(31, 41, 55, 0.4)' } },
+      grid: { vertLines: { color: 'rgba(31, 41, 55, 0.2)' }, horzLines: { color: 'rgba(31, 41, 55, 0.2)' } },
       crosshair: { mode: 1 },
-      rightPriceScale: { borderColor: 'rgba(31, 41, 55, 0.8)' },
-      timeScale: { borderColor: 'rgba(31, 41, 55, 0.8)', timeVisible: true }
+      rightPriceScale: { borderColor: 'rgba(31, 41, 55, 0.5)' },
+      timeScale: { borderColor: 'rgba(31, 41, 55, 0.5)' }
     });
 
-    const candleSeries = chart.addCandlestickSeries({
-      upColor: '#10b981', downColor: '#ef4444', borderVisible: false,
-      wickUpColor: '#10b981', wickDownColor: '#ef4444'
-    });
-
-    // Drawing series for the Red/Green Risk Reward Box & Trendlines
-    const tpArea = chart.addAreaSeries({ topColor: 'rgba(16, 185, 129, 0.3)', bottomColor: 'rgba(16, 185, 129, 0.1)', lineColor: '#10b981', lineWidth: 1 });
-    const slArea = chart.addAreaSeries({ topColor: 'rgba(239, 68, 68, 0.1)', bottomColor: 'rgba(239, 68, 68, 0.3)', lineColor: '#ef4444', lineWidth: 1 });
+    const candleSeries = chart.addCandlestickSeries({ upColor: '#10b981', downColor: '#ef4444', borderVisible: false, wickUpColor: '#10b981', wickDownColor: '#ef4444' });
+    const tpArea = chart.addAreaSeries({ topColor: 'rgba(16, 185, 129, 0.2)', bottomColor: 'rgba(16, 185, 129, 0.05)', lineColor: '#10b981', lineWidth: 1 });
+    const slArea = chart.addAreaSeries({ topColor: 'rgba(239, 68, 68, 0.1)', bottomColor: 'rgba(239, 68, 68, 0.2)', lineColor: '#ef4444', lineWidth: 1 });
     const trendline = chart.addLineSeries({ color: '#22d3ee', lineWidth: 2, lineStyle: 2 });
 
-    // Handle Resize
-    window.addEventListener('resize', () => chart.resize(chartContainer.clientWidth, chartContainer.clientHeight));
-
-    // --- 2. WEBSOCKET DATA HANDLING ---
+    // --- WEBSOCKET CONNECTION ---
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const socket = new WebSocket(`${protocol}//${window.location.host}/ws/terminal`);
     
-    let chartDataStore = {}; // Store candles for each coin
+    let chartDataStore = {}; 
     let activeCoin = "BTCUSDT";
 
     socket.onmessage = function(event) {
       const data = JSON.parse(event.data);
-      
-      // Update Sidebar Asset List
       updateSidebar(data);
-
-      // If this tick is for our active chart, update candles & AI drawings
-      if (data.symbol === activeCoin) {
-        updateChart(data);
-      }
+      if (data.symbol === activeCoin) updateChart(data);
     };
 
     function updateSidebar(data) {
       const list = document.getElementById('asset-list');
       let item = document.getElementById(`asset-${data.symbol}`);
-      
       const badgeClass = data.action === 'BUY' ? 'badge-buy' : 'badge-sell';
       const changeColor = data.change > 0 ? 'text-emerald-400' : 'text-red-400';
       
+      // Multi-Exchange Badges Logic
+      let exBadge = '<span class="exchange-tag bg-yellow-500/20 text-yellow-500 border border-yellow-500/50">BINANCE</span>';
+      if(data.symbol.includes('ETH')) exBadge += '<span class="exchange-tag bg-blue-500/20 text-blue-500 border border-blue-500/50">DELTA</span>';
+      if(data.symbol.includes('SOL')) exBadge += '<span class="exchange-tag bg-purple-500/20 text-purple-500 border border-purple-500/50">COINDCX</span>';
+
       if (!item) {
-        // Create new row
         item = document.createElement('div');
         item.id = `asset-${data.symbol}`;
-        item.className = `p-2 rounded border border-gray-800 bg-gray-900/30 cursor-pointer hover:bg-gray-800 transition flex justify-between items-center`;
-        item.onclick = () => switchActiveCoin(data.symbol);
+        item.className = `p-3 rounded-lg border border-gray-800 bg-gray-900/40 cursor-pointer active:bg-gray-800 transition flex justify-between items-center`;
+        item.onclick = () => {
+          activeCoin = data.symbol;
+          document.getElementById('active-coin-name').innerText = data.symbol;
+          switchTab('prediction'); // Auto-jump to chart
+        };
         list.appendChild(item);
       }
       
       item.innerHTML = `
         <div>
-          <div class="font-bold text-gray-200 text-sm flex items-center gap-2">
+          <div class="font-black text-gray-200 text-sm flex items-center gap-2 mb-1">
             ${data.symbol.replace('USDT','')}
-            <span class="text-[8px] px-1 rounded ${badgeClass}">${data.action}</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded ${badgeClass}">${data.action}</span>
           </div>
-          <div class="text-[9px] text-gray-500">Vol: High</div>
+          <div>${exBadge}</div>
         </div>
         <div class="text-right">
           <div class="font-bold text-gray-100 text-sm">${data.price.toLocaleString(undefined, {minimumFractionDigits:2})}</div>
-          <div class="text-[9px] ${changeColor}">${data.change > 0 ? '+'+data.change : data.change}%</div>
+          <div class="text-[10px] font-bold ${changeColor}">${data.change > 0 ? '+'+data.change : data.change}%</div>
         </div>
       `;
     }
 
-    function switchActiveCoin(symbol) {
-      activeCoin = symbol;
-      document.getElementById('active-coin-name').innerText = symbol;
-      // Data will refresh on next tick
-    }
-
     function updateChart(data) {
-      // Manage candle history locally for the demo
-      if (!chartDataStore[data.symbol]) {
-        chartDataStore[data.symbol] = generateHistory(data.price);
-      }
-      
+      if (!chartDataStore[data.symbol]) chartDataStore[data.symbol] = generateHistory(data.price);
       let history = chartDataStore[data.symbol];
       const currentTime = Math.floor(Date.now() / 1000);
       
-      // Add latest tick
-      history.push({
-        time: currentTime, open: data.price, high: data.price+5, low: data.price-5, close: data.price
-      });
+      history.push({ time: currentTime, open: data.price, high: data.price+5, low: data.price-5, close: data.price });
       candleSeries.setData(history);
 
-      // --- DRAW THE AI LONG/SHORT BOX ---
       const entry = data.ai.entry;
       const tp = data.ai.tp;
       const sl = data.ai.sl;
-      const boxStart = history[history.length - 15].time; // Box starts a few candles back
-      const boxEnd = currentTime + 3600; // Projects into future
+      const boxStart = history[history.length - 20].time; 
+      const boxEnd = currentTime + 3600; 
 
-      // Update UI Text
       document.getElementById('ui-entry').innerText = entry.toFixed(2);
       document.getElementById('ui-tp').innerText = tp.toFixed(2);
       document.getElementById('ui-sl').innerText = sl.toFixed(2);
       
+      // Update the Pro Quant Metrics from backend
+      document.getElementById('ui-liq').innerText = data.quant.liquidation_risk;
+      document.getElementById('ui-whale').innerText = data.quant.whale_activity;
+      document.getElementById('ui-dom').innerText = data.quant.orderbook_dom;
+      document.getElementById('ml-score').innerText = `ML: ${data.quant.ml_confidence}%`;
+
       const badge = document.getElementById('ai-status-badge');
       if (data.action === "BUY") {
-        badge.className = "px-3 py-1 rounded text-xs font-bold badge-buy animate-pulse";
-        badge.innerText = "AI DETECTED: LONG SETUP";
-        
-        // Draw Green Top, Red Bottom
+        badge.className = "px-2 py-1 rounded text-[10px] font-bold badge-buy animate-pulse";
+        badge.innerText = "SETUP: LONG";
         tpArea.setData([{time: boxStart, value: tp}, {time: boxEnd, value: tp}]);
         slArea.setData([{time: boxStart, value: entry}, {time: boxEnd, value: entry}]);
-        
-        // Auto Trendline Support
-        trendline.setData([{time: history[history.length-40].time, value: entry - 100}, {time: currentTime, value: entry}]);
+        trendline.setData([{time: history[history.length-50].time, value: entry - 150}, {time: currentTime, value: entry}]);
       } else {
-        badge.className = "px-3 py-1 rounded text-xs font-bold badge-sell animate-pulse";
-        badge.innerText = "AI DETECTED: SHORT SETUP";
-        
-        // Draw Red Top (SL), Green Bottom (TP) for Shorts
+        badge.className = "px-2 py-1 rounded text-[10px] font-bold badge-sell animate-pulse";
+        badge.innerText = "SETUP: SHORT";
         slArea.setData([{time: boxStart, value: sl}, {time: boxEnd, value: sl}]);
         tpArea.setData([{time: boxStart, value: entry}, {time: boxEnd, value: entry}]);
-        
-        // Auto Trendline Resistance
-        trendline.setData([{time: history[history.length-40].time, value: entry + 100}, {time: currentTime, value: entry}]);
+        trendline.setData([{time: history[history.length-50].time, value: entry + 150}, {time: currentTime, value: entry}]);
       }
     }
 
@@ -266,9 +280,7 @@
       let lastPrice = currentPrice - 500;
       for (let i = 100; i > 0; i--) {
         lastPrice = lastPrice + (Math.random() * 80 - 40);
-        mockData.push({
-          time: currentUnix - (i * 900), open: lastPrice, high: lastPrice + 40, low: lastPrice - 40, close: lastPrice + (Math.random() * 30 - 15)
-        });
+        mockData.push({ time: currentUnix - (i * 900), open: lastPrice, high: lastPrice + 40, low: lastPrice - 40, close: lastPrice + (Math.random() * 30 - 15) });
       }
       return mockData;
     }
