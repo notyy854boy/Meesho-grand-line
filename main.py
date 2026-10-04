@@ -213,25 +213,6 @@ async def get_prediction(symbol: str = "BTCUSDT"):
     except Exception as e:
         return JSONResponse({"status": "error", "message": str(e)})
 
-# ==========================================
-# 4. TELEGRAM UI
-# ==========================================
-@dp.message(Command("start", "panel"))
-async def cmd_panel(message: types.Message):
-    if ADMIN_ID != 0 and message.from_user.id != ADMIN_ID: return
-    
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="📱 OPEN BADA BHAI V7", web_app=WebAppInfo(url=WEB_APP_URL))]],
-        resize_keyboard=True
-    )
-    await message.answer(
-        "👑 **BADA BHAI ALADDIN ENGINE ACTIVE**\n"
-        "⚡ Data Source: Supabase\n"
-        "🧠 AI Memory: MongoDB\n"
-        "Terminal kholne ke liye button daba 👇", 
-        reply_markup=keyboard
-    )
-
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run(api, host="0.0.0.0", port=port)
