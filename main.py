@@ -29,7 +29,7 @@ harvest_status = {"status": "IDLE", "last_batch": "None", "errors": 0}
 
 class MasterDataPipeline:
     def __init__(self):
-        self.exchange = ccxt_async.bybit({'enableRateLimit': True})
+        self.exchange = ccxt_async.kucoin({'enableRateLimit': True})
     
     async def upload_archive_async(self, df: pd.DataFrame, filename: str):
         def _upload():
