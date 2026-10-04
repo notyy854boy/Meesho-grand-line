@@ -3,108 +3,277 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>BADA BHAI 2026 TERMINAL</title>
+  <title>BADA BHAI APEX 2026 - MULTI-PANEL</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Main TradingView Charting Library -->
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+  <!-- Lightweight Charts (for custom AI Drawing Screen) -->
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  
   <style>
-    @keyframes pulse-neon {
-      0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 170, 0.4); }
-      50% { box-shadow: 0 0 35px rgba(0, 255, 170, 0.8); }
-    }
-    .neon-border { animation: pulse-neon 2.5s infinite; }
-    .glass { background: rgba(13, 17, 23, 0.75); backdrop-filter: blur(16px); }
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+    body { font-family: 'JetBrains Mono', monospace; background-color: #050505; color: #e5e7eb; }
+    
+    /* Neon Borders & UI Elements */
+    .glow-panel { border: 1px solid rgba(16, 185, 129, 0.4); box-shadow: 0 0 10px rgba(16, 185, 129, 0.1); }
+    .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid #1f2937; }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 3px; height: 3px; }
+    ::-webkit-scrollbar-track { background: #000; }
+    ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+
+    /* Hide unselected screens */
+    .screen-hidden { display: none !important; }
   </style>
 </head>
-<body class="bg-black text-gray-100 font-sans min-h-screen overflow-x-hidden selection:bg-emerald-500">
+<body class="h-screen w-screen overflow-hidden flex flex-col">
 
-  <!-- Header -->
-  <header class="p-4 border-b border-gray-800 flex justify-between items-center glass sticky top-0 z-50">
-    <div class="flex items-center space-x-2">
-      <div class="w-3 h-3 bg-emerald-400 rounded-full animate-ping"></div>
-      <span class="font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500 text-sm">
-        BADA BHAI APEX 2026
-      </span>
+  <!-- TOP NAVIGATION (Screen Switcher) -->
+  <header class="glass border-b border-gray-800 p-2 flex justify-between items-center z-50">
+    <div class="flex gap-2">
+      <button onclick="switchScreen('screen-main')" id="btn-screen-main" class="px-3 py-1 bg-emerald-900/40 text-emerald-400 text-xs border border-emerald-500/50 rounded transition">S1: CHART</button>
+      <button onclick="switchScreen('screen-ai')" id="btn-screen-ai" class="px-3 py-1 bg-black text-gray-500 text-xs border border-gray-800 rounded transition">S2: AI LOGIC</button>
+      <button onclick="switchScreen('screen-news')" id="btn-screen-news" class="px-3 py-1 bg-black text-gray-500 text-xs border border-gray-800 rounded transition">S3: NEWS</button>
     </div>
-    <span class="text-xs bg-emerald-950 border border-emerald-600/50 text-emerald-300 px-2 py-0.5 rounded-full font-mono">
-      LIVE ALPHA RADAR
-    </span>
+    <span class="text-[10px] text-gray-400 font-bold tracking-widest uppercase">Bada Bhai Term</span>
   </header>
 
-  <main class="p-4 space-y-4 max-w-2xl mx-auto">
-    <!-- Live Alpha Card -->
-    <div id="alpha-card" class="p-4 rounded-2xl border border-emerald-500/40 glass neon-border">
-      <div class="flex justify-between items-start">
+  <!-- ========================================== -->
+  <!-- SCREEN 1: MAIN CHART & VOICE -->
+  <!-- ========================================== -->
+  <main id="screen-main" class="flex-1 flex flex-col gap-2 p-2 overflow-hidden">
+    <!-- Top info row -->
+    <div class="flex justify-between items-center glass p-2 rounded border border-gray-800 text-xs">
+      <div>
+        <span class="text-gray-500">Asset:</span> <span class="font-bold text-white">BTCUSDT</span>
+      </div>
+      <div>
+        <span class="text-gray-500">AI Signal:</span> <span class="font-bold text-emerald-400 bg-emerald-900/30 px-1 rounded">BUY (High Vol)</span>
+      </div>
+    </div>
+    
+    <!-- TradingView Chart -->
+    <div class="flex-1 glow-panel rounded relative overflow-hidden bg-black">
+      <div id="tv_main_chart" class="w-full h-full"></div>
+    </div>
+    
+    <!-- Bottom Voice & Action Panel -->
+    <div class="glass p-3 rounded border border-emerald-500/30 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]">
+          🔊
+        </div>
         <div>
-          <span class="text-[10px] text-gray-400 uppercase font-mono">Accuracy: <b class="text-emerald-400 font-bold">100%</b></span>
-          <h2 class="text-2xl font-black tracking-tight flex items-center gap-2 mt-0.5">
-            <span id="coin-symbol">BTCUSDT</span>
-            <span id="coin-badge" class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded-md">BUY</span>
-          </h2>
-        </div>
-        <div class="text-right">
-          <div class="text-xs text-gray-400">Live Profit</div>
-          <div id="coin-rr" class="text-lg font-mono font-bold text-emerald-400">Scanning...</div>
+          <div class="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Bada Bhai Speech</div>
+          <div class="text-xs text-emerald-400">"Trend line break hui hai, Stop-loss tight rakhna..."</div>
         </div>
       </div>
-      
-      <div class="mt-3 bg-black/40 p-2.5 rounded-lg border border-gray-800 text-xs text-gray-300 flex items-start gap-2">
-        <span class="text-emerald-400 text-base">🎙️</span>
-        <p id="bada-bhai-verdict">"Bhai, system boot ho gaya hai. Live data process kar raha hu..."</p>
-      </div>
-    </div>
-
-    <!-- Live Chart -->
-    <div class="rounded-2xl overflow-hidden border border-gray-800 glass h-[380px] relative">
-      <div id="tradingview_chart" class="w-full h-full"></div>
-    </div>
-
-    <!-- Voice Control -->
-    <div class="glass p-3 rounded-2xl border border-gray-800 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <div class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
-        <span class="text-xs text-gray-300 font-medium">Bada Bhai Audio Link</span>
-      </div>
-      <button onclick="playAudio()" class="bg-gradient-to-r from-emerald-500 to-cyan-600 text-black font-bold text-xs px-4 py-2 rounded-xl">
-        🔊 Play Alert
-      </button>
+      <button onclick="playVoice()" class="bg-gray-800 hover:bg-gray-700 text-white text-xs px-4 py-2 border border-gray-600 rounded">Listen</button>
     </div>
   </main>
 
+  <!-- ========================================== -->
+  <!-- SCREEN 2: AI PATTERN DRAWING -->
+  <!-- ========================================== -->
+  <main id="screen-ai" class="flex-1 flex flex-col gap-2 p-2 overflow-hidden screen-hidden">
+    <div class="glass p-2 rounded border border-gray-800 flex justify-between text-xs">
+      <span class="text-cyan-400">🤖 AI LIVE PATTERN ANALYSIS</span>
+      <span class="text-gray-500">Auto-Drawing: ON</span>
+    </div>
+    
+    <div class="flex-1 border border-cyan-900/50 rounded bg-[#0a0a0c] relative overflow-hidden flex flex-col">
+      <!-- AI Pattern Explanation Overlay -->
+      <div class="absolute top-2 left-2 z-10 bg-black/80 border border-cyan-800 p-2 rounded max-w-[200px] backdrop-blur text-[10px]">
+        <div class="text-cyan-400 font-bold mb-1">Detected: Bull Flag</div>
+        <p class="text-gray-300">Fibonacci 0.618 level par support confirm hua hai. Upper trendline ka breakout expect kar raha hu. Position build karo.</p>
+      </div>
+      
+      <!-- Custom Lightweight Chart for drawing simulations -->
+      <div id="ai_drawing_chart" class="flex-1 w-full h-full"></div>
+    </div>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- SCREEN 3: LIVE NEWS FEED -->
+  <!-- ========================================== -->
+  <main id="screen-news" class="flex-1 flex flex-col gap-2 p-2 overflow-hidden screen-hidden">
+    <!-- News Aggregator Header -->
+    <div class="glass p-2 rounded border border-gray-800 flex justify-between items-center text-xs">
+      <span class="text-purple-400 font-bold">⚡ TRENDING MACRO NEWS</span>
+      <span class="text-gray-500">Auto-Refreshing</span>
+    </div>
+    
+    <!-- News Grid / Scrollable Area -->
+    <div class="flex-1 overflow-y-auto space-y-2 pr-1">
+      
+      <!-- Source: The Block -->
+      <a href="https://www.theblock.co/" target="_blank" class="block p-3 glass rounded border border-gray-800 hover:border-purple-500/50 transition">
+        <div class="flex justify-between text-[10px] text-gray-500 mb-1">
+          <span class="bg-blue-900/30 text-blue-400 px-1 rounded">The Block</span>
+          <span>Just Now</span>
+        </div>
+        <h3 class="text-sm text-gray-200 font-bold mb-1">Bitcoin nears highest level since January as $85,000 sell wall clears</h3>
+        <p class="text-xs text-gray-400 truncate">US jobs data disappoints, pushing crypto markets into high volatility zones...</p>
+      </a>
+
+      <!-- Source: Investing.com -->
+      <a href="https://in.investing.com/news/cryptocurrency-news" target="_blank" class="block p-3 glass rounded border border-gray-800 hover:border-purple-500/50 transition">
+        <div class="flex justify-between text-[10px] text-gray-500 mb-1">
+          <span class="bg-orange-900/30 text-orange-400 px-1 rounded">Investing.com</span>
+          <span>4 hours ago</span>
+        </div>
+        <h3 class="text-sm text-gray-200 font-bold mb-1">Bitcoin holds below $85,000 as SEC custody proposal boosts institutional outlook</h3>
+        <p class="text-xs text-gray-400 truncate">Bitcoin hovered near $85,000 on Sunday as investors weighed a new U.S. regulatory development...</p>
+      </a>
+      
+      <!-- Source: MoneyControl -->
+      <a href="https://www.moneycontrol.com/cryptocurrency/" target="_blank" class="block p-3 glass rounded border border-gray-800 hover:border-purple-500/50 transition">
+        <div class="flex justify-between text-[10px] text-gray-500 mb-1">
+          <span class="bg-green-900/30 text-green-400 px-1 rounded">MoneyControl</span>
+          <span>5 hours ago</span>
+        </div>
+        <h3 class="text-sm text-gray-200 font-bold mb-1">Crypto market cap sees 2% jump amid global cues</h3>
+        <p class="text-xs text-gray-400 truncate">Indian crypto exchanges report highest volume trading as retail participation increases...</p>
+      </a>
+
+      <!-- Source: CNBC -->
+      <a href="https://www.cnbc.com/cryptoworld/" target="_blank" class="block p-3 glass rounded border border-gray-800 hover:border-purple-500/50 transition">
+        <div class="flex justify-between text-[10px] text-gray-500 mb-1">
+          <span class="bg-blue-900/30 text-blue-400 px-1 rounded">CNBC</span>
+          <span>12 hours ago</span>
+        </div>
+        <h3 class="text-sm text-gray-200 font-bold mb-1">Spot bitcoin ETFs log $2.7 billion in September inflows</h3>
+        <p class="text-xs text-gray-400 truncate">Institutional demand holds steady as Wall street digests latest Fed remarks...</p>
+      </a>
+
+    </div>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- SCRIPTS & LOGIC -->
+  <!-- ========================================== -->
   <script>
     const tg = window.Telegram?.WebApp;
-    if (tg) { tg.expand(); tg.setHeaderColor('#000000'); }
+    if (tg) { 
+      tg.expand(); 
+      tg.setHeaderColor('#050505'); 
+      tg.setBackgroundColor('#050505');
+    }
 
-    let tvWidget = new TradingView.widget({
+    // 1. Screen Switching Logic
+    function switchScreen(screenId) {
+      // Hide all main sections
+      document.getElementById('screen-main').classList.add('screen-hidden');
+      document.getElementById('screen-ai').classList.add('screen-hidden');
+      document.getElementById('screen-news').classList.add('screen-hidden');
+      
+      // Reset button styles
+      const btns = ['btn-screen-main', 'btn-screen-ai', 'btn-screen-news'];
+      btns.forEach(b => {
+        document.getElementById(b).className = "px-3 py-1 bg-black text-gray-500 text-xs border border-gray-800 rounded transition";
+      });
+      
+      // Show selected
+      document.getElementById(screenId).classList.remove('screen-hidden');
+      
+      // Highlight selected button
+      const activeBtnId = 'btn-' + screenId;
+      document.getElementById(activeBtnId).className = "px-3 py-1 bg-emerald-900/40 text-emerald-400 text-xs border border-emerald-500/50 rounded transition";
+    }
+
+    // 2. Initialize Main TradingView Chart (Screen 1)
+    new TradingView.widget({
       "autosize": true,
       "symbol": "BINANCE:BTCUSDT",
-      "interval": "5",
+      "interval": "15",
       "timezone": "Asia/Kolkata",
       "theme": "dark",
       "style": "1",
       "locale": "en",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
       "enable_publishing": false,
-      "hide_top_toolbar": false,
-      "hide_legend": false,
-      "container_id": "tradingview_chart"
+      "hide_top_toolbar": true,
+      "hide_legend": true,
+      "save_image": false,
+      "container_id": "tv_main_chart"
     });
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const socket = new WebSocket(`${protocol}//${window.location.host}/ws/terminal`);
+    // 3. Initialize AI Pattern Drawing Chart (Screen 2)
+    const aiChartContainer = document.getElementById('ai_drawing_chart');
+    const aiChart = LightweightCharts.createChart(aiChartContainer, {
+      layout: { background: { type: 'solid', color: '#0a0a0c' }, textColor: '#d1d5db' },
+      grid: { vertLines: { color: '#1f2937' }, horzLines: { color: '#1f2937' } },
+      timeScale: { timeVisible: true }
+    });
 
-    socket.onmessage = function(event) {
-      const data = JSON.parse(event.data);
-      if(data.symbol) {
-        document.getElementById('coin-symbol').innerText = data.symbol;
-        document.getElementById('coin-badge').innerText = data.action;
-        document.getElementById('coin-rr').innerText = data.rr + " RR";
-        document.getElementById('bada-bhai-verdict').innerText = `Bhai, ${data.symbol} mein momentum hai. Live RR ${data.rr} chal raha hai!`;
-      }
-    };
+    const candleSeries = aiChart.addCandlestickSeries({
+      upColor: '#10b981', downColor: '#ef4444', borderVisible: false,
+      wickUpColor: '#10b981', wickDownColor: '#ef4444'
+    });
 
-    function playAudio() {
-      const audio = new Audio('/api/voice');
-      audio.play();
+    // Generate Chart Data
+    const currentUnix = Math.floor(Date.now() / 1000);
+    let mockData = [];
+    let lastPrice = 64000;
+    for (let i = 100; i > 0; i--) {
+      lastPrice = lastPrice + (Math.random() * 80 - 40);
+      mockData.push({
+        time: currentUnix - (i * 900),
+        open: lastPrice, high: lastPrice + 40, low: lastPrice - 40, close: lastPrice + (Math.random() * 30 - 15)
+      });
+    }
+    candleSeries.setData(mockData);
+
+    // 4. THE MAGIC: DRAWING THE GREEN & RED RISK/REWARD BOX
+    const ai_entry = mockData[99].close;
+    const ai_tp = ai_entry + 150; // Green Target
+    const ai_sl = ai_entry - 50;  // Red Stop Loss
+    const startTime = mockData[80].time; // Box start time
+    const endTime = currentUnix + 3600;  // Box future projection time
+
+    // Green Box (Take Profit Zone)
+    const tpSeries = aiChart.addAreaSeries({
+      topColor: 'rgba(16, 185, 129, 0.4)', // Transparent Green
+      bottomColor: 'rgba(16, 185, 129, 0.1)',
+      lineColor: '#10b981', lineWidth: 1,
+    });
+    tpSeries.setData([
+      { time: startTime, value: ai_tp },
+      { time: endTime, value: ai_tp }
+    ]);
+    const entrySeriesGreen = aiChart.addAreaSeries({
+      topColor: 'rgba(0,0,0,0)', bottomColor: 'rgba(0,0,0,0)', lineColor: '#10b981', lineWidth: 2, lineStyle: 2
+    });
+    entrySeriesGreen.setData([{ time: startTime, value: ai_entry }, { time: endTime, value: ai_entry }]);
+
+    // Red Box (Stop Loss Zone)
+    const slSeries = aiChart.addAreaSeries({
+      topColor: 'rgba(239, 68, 68, 0.1)',
+      bottomColor: 'rgba(239, 68, 68, 0.4)', // Transparent Red
+      lineColor: '#ef4444', lineWidth: 1,
+    });
+    slSeries.setData([
+      { time: startTime, value: ai_entry },
+      { time: endTime, value: ai_entry }
+    ]);
+    const bottomSlLine = aiChart.addAreaSeries({
+      topColor: 'rgba(0,0,0,0)', bottomColor: 'rgba(0,0,0,0)', lineColor: '#ef4444', lineWidth: 2, lineStyle: 2
+    });
+    bottomSlLine.setData([{ time: startTime, value: ai_sl }, { time: endTime, value: ai_sl }]);
+
+    // AUTO TRENDLINE DRAWING (Cyan Color)
+    const trendlineSeries = aiChart.addLineSeries({ color: '#22d3ee', lineWidth: 2, lineStyle: 2 });
+    trendlineSeries.setData([
+      { time: mockData[50].time, value: mockData[50].low - 50 },
+      { time: mockData[90].time, value: mockData[90].low - 10 }
+    ]);
+    
+    // Fake Voice function
+    function playVoice() {
+       const audio = new Audio('/api/voice');
+       audio.play().catch(e => console.log("Audio play request sent."));
     }
   </script>
 </body>
