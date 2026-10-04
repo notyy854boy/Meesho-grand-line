@@ -1,7 +1,8 @@
-fastapi
-uvicorn
-aiogram
-motor
-certifi
-pydantic
-httpx
+fastapi==0.115.0
+uvicorn==0.30.6
+aiogram==3.13.1
+websockets==13.1
+aiohttp==3.10.5
+pydantic==2.9.2
+edge-tts==6.1.12
+python-dotenv==1.0.1
