@@ -6,17 +6,12 @@ import pandas as pd
 from supabase import create_client, Client
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
-from dotenv import load_dotenv
 from fastapi import FastAPI
-import uvicorn
-
-load_dotenv()
 
 # --- CONFIGURATION ---
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 
-# 🔥 DIRECT SUPABASE KEYS 🔥
 SUPABASE_URL = "https://sdlfggybitpoxczdeihq.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbGZnZ3liaXRwb3hjemRlaWhxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTEyMjAxOSwiZXhwIjoyMTA2Njk4MDE5fQ.-qa5c60tZf1viwGhQpYqiGq0vv0Fy9IfIbK7quID838"
 SUPABASE_BUCKET = "quant-lake"
@@ -25,7 +20,7 @@ SUPABASE_BUCKET = "quant-lake"
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-api = FastAPI()  # Dummy Web App for Render
+api = FastAPI()
 
 is_harvesting = False
 harvest_status = {"status": "IDLE", "last_batch": "None", "errors": 0}
@@ -135,28 +130,14 @@ async def cmd_status(message: types.Message):
             f"**Checkpoints:**\n{chk_text}")
     await message.answer(text, parse_mode="Markdown")
 
-# --- Render ke liye Dummy Web Server ---
-@api.get("/")
-async def root():
-    return {"status": "Bada Bhai God Engine is LIVE!"}
-
-async def main():
-    print("🚀 Starting Web Server and Bot...")
-    
-    # 1. Telegram conflict auto-fix
+# --- FASTAPI STARTUP EVENT (Render Port Fix) ---
+@api.on_event("startup")
+async def startup_event():
+    print("🚀 Bada Bhai God Engine Started...")
     await bot.delete_webhook(drop_pending_updates=True)
-    
-    # 2. Start Dummy Web Server for Render
-    port = int(os.environ.get("PORT", 8080))
-    config = uvicorn.Config(api, host="0.0.0.0", port=port, log_level="info")
-    server = uvicorn.Server(config)
-    
-    # 3. Run both Bot and Server together
-    await asyncio.gather(
-        server.serve(),
-        dp.start_polling(bot)
-    )
+    asyncio.create_task(dp.start_polling(bot))
 
-if __name__ == "__main__":
-    asyncio.run(main())
+@api.get("/")
+def root():
+    return {"status": "Bada Bhai God Engine is LIVE!"}
     
