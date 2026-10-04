@@ -1,354 +1,697 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Bada Bhai God Engine V7 (True Dynamic AI)</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap');
-    body { font-family: 'JetBrains Mono', monospace; background-color: #050505; color: #e5e7eb; overflow: hidden; }
-    .glass { background: rgba(15, 23, 42, 0.95); border: 1px solid #1f2937; backdrop-filter: blur(10px); }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>God Engine | Pro Terminal</title>
+    <!-- Telegram WebApp & Icons -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    .screen-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transition: transform 0.3s ease-in-out; background-color: #050505; }
-    .screen-active { transform: translateX(0); z-index: 10; }
-    .screen-hidden-right { transform: translateX(100%); z-index: 1; }
-    
-    .crypto-scroll::-webkit-scrollbar { height: 2px; }
-    .crypto-scroll::-webkit-scrollbar-track { background: #000; }
-    .crypto-scroll::-webkit-scrollbar-thumb { background: #10b981; }
-    
-    .z-top { z-index: 50; }
-    .pulse-glow { animation: glow 2s infinite alternate; }
-    @keyframes glow { from { box-shadow: 0 0 5px #06b6d4; } to { box-shadow: 0 0 15px #06b6d4; } }
-  </style>
-</head>
-<body class="h-screen w-screen flex flex-col relative">
-
-  ## GLOBAL HEADER & MULTI-COIN SCANNER
-  <header class="glass p-2 border-b border-gray-800 z-top absolute top-0 w-full">
-    <div class="flex justify-between items-center mb-1">
-      <div class="flex items-center gap-2">
-        <div class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
-        <span class="font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500 text-sm">BADA BHAI AI</span>
-      </div>
-      <div class="text-[9px] text-cyan-400 font-bold bg-cyan-900/30 px-2 py-0.5 rounded border border-cyan-800">LIVE QUANT ENGINE</div>
-    </div>
-    
-    <div class="flex gap-2 overflow-x-auto crypto-scroll pb-1" id="ticker-bar">
-      <div class="px-3 py-1 bg-gray-800/50 rounded border border-gray-700 text-[10px] text-gray-400">Syncing Market Data...</div>
-    </div>
-  </header>
-
-  ## SCREEN 1: MAIN TERMINAL
-  <div id="screen-main" class="screen-container screen-active pt-[70px] pb-2 px-2 flex flex-col gap-2">
-    
-    <div class="flex gap-1 overflow-x-auto crypto-scroll py-1 shrink-0">
-      <button onclick="changeTimeframe('1')" class="px-3 py-1 rounded bg-gray-800 text-xs font-bold text-gray-400 transition timeframe-btn" id="tf-1">1m</button>
-      <button onclick="changeTimeframe('5')" class="px-3 py-1 rounded bg-gray-800 text-xs font-bold text-gray-400 transition timeframe-btn" id="tf-5">5m</button>
-      <button onclick="changeTimeframe('15')" class="px-3 py-1 rounded bg-emerald-900/50 text-xs font-bold text-emerald-400 border border-emerald-500/50 transition timeframe-btn" id="tf-15">15m</button>
-      <button onclick="changeTimeframe('60')" class="px-3 py-1 rounded bg-gray-800 text-xs font-bold text-gray-400 transition timeframe-btn" id="tf-60">1h</button>
-      <button onclick="changeTimeframe('240')" class="px-3 py-1 rounded bg-gray-800 text-xs font-bold text-gray-400 transition timeframe-btn" id="tf-240">4h</button>
-    </div>
-
-    <div class="flex-1 glass rounded-lg border-gray-800 relative w-full overflow-hidden">
-      <div id="tv_chart" class="absolute inset-0"></div>
-    </div>
-
-    <div class="glass p-2 rounded-lg border-gray-800 flex flex-col gap-2 shrink-0">
-      <div class="flex gap-2">
-        <button onclick="openPredictionScreen()" class="flex-1 bg-cyan-900/20 hover:bg-cyan-900/40 border border-cyan-500 text-cyan-400 py-3 rounded-lg font-bold text-sm flex flex-col items-center justify-center transition pulse-glow">
-          <span class="text-lg mb-1">🤖</span> AI DRAWING & MATH
-        </button>
-        <button onclick="fetchMacroNews()" class="flex-1 bg-purple-900/20 hover:bg-purple-900/40 border border-purple-500 text-purple-400 py-3 rounded-lg font-bold text-sm flex flex-col items-center justify-center transition">
-          <span class="text-lg mb-1">📰</span> LIVE NEWS
-        </button>
-      </div>
-    </div>
-  </div>
-
-  ## SCREEN 2: TRUE AI PREDICTION & DRAWING
-  <div id="screen-prediction" class="screen-container screen-hidden-right pt-[70px] pb-2 px-2 flex flex-col gap-2">
-    <div class="flex justify-between items-center p-2 glass rounded-lg shrink-0">
-      <button onclick="closeScreens()" class="text-white font-bold px-3 py-1 bg-gray-800 rounded text-xs transition border border-gray-600">⬅ BACK</button>
-      <span class="text-cyan-400 font-bold text-[10px] px-2 bg-cyan-900/30 py-1 rounded" id="ai-target-coin">...</span>
-    </div>
-
-    <div class="glass p-3 rounded-lg border-cyan-500/50 text-[10px] text-gray-300 shrink-0 leading-relaxed flex flex-col gap-2" id="ai-reasoning">
-      <div class="text-center text-cyan-400 animate-pulse">Running Quant Calculations on Real Data...</div>
-    </div>
-    
-    <button onclick="playAIVoice()" class="w-full bg-emerald-500/10 border border-emerald-500 text-emerald-400 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-2">
-      🔊 PLAY AUDIO BRIEF
-    </button>
-
-    <div class="flex-1 glass rounded-lg border-gray-800 relative w-full h-[400px] overflow-hidden">
-      <div class="absolute top-2 left-2 z-10 glass px-2 py-1 rounded text-[9px] text-gray-400 font-bold">ASLI LIVE CHART + POSITION TOOL</div>
-      <div id="ai_chart" class="absolute inset-0"></div>
-    </div>
-  </div>
-
-  ## SCREEN 3: REAL MACRO NEWS
-  <div id="screen-news" class="screen-container screen-hidden-right pt-[70px] pb-2 px-2 flex flex-col gap-2">
-    <div class="flex justify-between items-center p-2 glass rounded-lg shrink-0">
-      <button onclick="closeScreens()" class="text-white font-bold px-3 py-1 bg-gray-800 rounded text-xs transition border border-gray-600">⬅ BACK</button>
-      <span class="text-purple-400 font-bold text-[10px] px-2 bg-purple-900/30 py-1 rounded">GLOBAL CRYPTO NEWS</span>
-    </div>
-    <div class="flex-1 overflow-y-auto space-y-2 pb-4 pr-1" id="dynamic-news">
-      <div class="text-center text-gray-500 mt-10">Fetching Real-time feeds...</div>
-    </div>
-  </div>
-
-  <script>
-    // Initialize Telegram Mini App
-    const tg = window.Telegram?.WebApp;
-    if (tg) { tg.expand(); tg.setHeaderColor('#050505'); tg.setBackgroundColor('#050505'); }
-
-    let currentSymbol = "BTCUSDT";
-    let currentTimeframe = "15";
-    let tvWidget = null;
-    let aiChartInstance = null;
-    let candleSeries = null;
-    let aiReportText = "";
-
-    // IMPORTANT COINS LIST
-    const trackedCoins = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'DOGEUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT'];
-    const liveMarketData = {};
-
-    // 1. TRADINGVIEW MAIN WIDGET (KUCOIN DATA)
-    function loadTVChart(symbol, interval) {
-      if (tvWidget) { tvWidget.remove(); }
-      tvWidget = new TradingView.widget({
-        "autosize": true,
-        "symbol": "KUCOIN:" + symbol,
-        "interval": interval,
-        "timezone": "Asia/Kolkata",
-        "theme": "dark",
-        "style": "1",
-        "locale": "en",
-        "backgroundColor": "rgba(0,0,0,0)",
-        "enable_publishing": false,
-        "hide_top_toolbar": true,
-        "hide_legend": true,
-        "container_id": "tv_chart"
-      });
-      document.getElementById('ai-target-coin').innerText = symbol + " QUANT ENGINE (" + interval + "m)";
-    }
-    loadTVChart(currentSymbol, currentTimeframe);
-
-    function changeTimeframe(tf) {
-      currentTimeframe = tf;
-      document.querySelectorAll('.timeframe-btn').forEach(btn => {
-        btn.className = "px-3 py-1 rounded bg-gray-800 text-xs font-bold text-gray-400 transition";
-      });
-      const activeBtn = document.getElementById('tf-' + tf);
-      activeBtn.className = "px-3 py-1 rounded bg-emerald-900/50 text-xs font-bold text-emerald-400 border border-emerald-500/50 transition";
-      loadTVChart(currentSymbol, currentTimeframe);
-    }
-
-    // 2. LIVE TICKER FROM BINANCE WS (REAL TIME)
-    const binanceWS = new WebSocket("wss://stream.binance.com:9443/ws/!miniTicker@arr");
-    const tickerBar = document.getElementById('ticker-bar');
-    
-    binanceWS.onmessage = (event) => {
-      const dataArray = JSON.parse(event.data);
-      if(document.getElementById('loading-text')) document.getElementById('loading-text').remove();
-
-      dataArray.forEach(data => {
-        if(trackedCoins.includes(data.s)) {
-          const sym = data.s;
-          const price = parseFloat(data.c);
-          const openPrice = parseFloat(data.o);
-          const changePct = ((price - openPrice) / openPrice) * 100;
-          
-          liveMarketData[sym] = { price: price, change: changePct };
-
-          const isUp = changePct >= 0;
-          const color = isUp ? "text-emerald-400" : "text-red-400";
-          const bg = isUp ? "bg-emerald-900/20 border-emerald-500/50" : "bg-red-900/20 border-red-500/50";
-          
-          let item = document.getElementById(`tick-${sym}`);
-          if (!item) {
-            item = document.createElement('div');
-            item.id = `tick-${sym}`;
-            item.onclick = () => { 
-                currentSymbol = sym; 
-                loadTVChart(sym, currentTimeframe); 
-            };
-            tickerBar.appendChild(item);
-          }
-          
-          const isActive = sym === currentSymbol;
-          const activeClass = isActive ? "border-cyan-400 bg-cyan-900/40" : bg;
-          item.className = `flex-shrink-0 px-2 py-1 rounded border cursor-pointer active:scale-95 transition flex flex-col items-center justify-center min-w-[70px] ${activeClass}`;
-          item.innerHTML = `
-            <span class="font-bold text-white text-[10px] mb-0.5">${sym.replace('USDT','')}</span>
-            <span class="font-mono text-[9px] ${color}">${price.toFixed(sym==='DOGEUSDT'?4:2)}</span>
-          `;
+    <!-- ========================================== -->
+    <!-- MEGA CSS ARCHITECTURE (BINANCE/PRO STYLE)  -->
+    <!-- ========================================== -->
+    <style>
+        /* 1. CSS Variables & Reset */
+        :root {
+            /* Binance/Pro Dark Theme */
+            --bg-base: #0b0e11; 
+            --bg-panel: #181a20;
+            --bg-glass: rgba(24, 26, 32, 0.85);
+            --bg-hover: #2b3139;
+            --text-main: #eaecef;
+            --text-muted: #848e9c;
+            --accent: #fcd535; /* Pro Gold Accent */
+            --accent-glow: rgba(252, 213, 53, 0.3);
+            --blue: #2962ff;
+            --green: #0ecb81;
+            --green-glow: rgba(14, 203, 129, 0.2);
+            --red: #f6465d;
+            --red-glow: rgba(246, 70, 93, 0.2);
+            --border: #2b3139;
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
         }
-      });
-    };
 
-    // 3. AI PREDICTION SCREEN LOGIC (NO MATH.RANDOM)
-    async function openPredictionScreen() {
-      document.getElementById('screen-main').classList.remove('screen-active');
-      document.getElementById('screen-main').style.transform = 'translateX(-100%)';
-      document.getElementById('screen-prediction').classList.remove('screen-hidden-right');
-      document.getElementById('screen-prediction').classList.add('screen-active');
-
-      document.getElementById('ai-reasoning').innerHTML = '<div class="text-center text-cyan-400 animate-pulse mt-2">Fetching Real API Data for ' + currentSymbol + '...</div>';
-      
-      initLightweightChart();
-      
-      // Step A: Fetch Asli OHLCV data from Binance REST API (Free, no keys needed for frontend)
-      const klinesRes = await fetch(`https://api.binance.com/api/v3/klines?symbol=${currentSymbol}&interval=15m&limit=100`);
-      const klinesData = await klinesRes.json();
-      
-      const realCandles = klinesData.map(d => ({
-        time: d[0] / 1000, 
-        open: parseFloat(d[1]), 
-        high: parseFloat(d[2]), 
-        low: parseFloat(d[3]), 
-        close: parseFloat(d[4])
-      }));
-      
-      candleSeries.setData(realCandles);
-      const currentPrice = realCandles[realCandles.length - 1].close;
-      const lastTime = realCandles[realCandles.length - 1].time;
-
-      // Step B: Fetch Logic from Your Backend
-      let backendTrend = "BULLISH";
-      let rsi = "45";
-      let tpPrice, slPrice;
-      
-      try {
-        // Tumhara FastApi endpoint
-        const backendRes = await fetch(`/api/predict?symbol=${currentSymbol}`);
-        const aiData = await backendRes.json();
-        if(aiData.status === 'success') {
-           backendTrend = aiData.trend.includes("BULLISH") ? "BULLISH" : (aiData.trend.includes("BEARISH") ? "BEARISH" : "NEUTRAL");
-           rsi = aiData.rsi;
-        }
-      } catch (err) {
-        // Agar backend abhi ready nahi hai, toh real price se dynamic logic lagayenge (NO RANDOM)
-        const diff = currentPrice - realCandles[realCandles.length - 10].close;
-        backendTrend = diff >= 0 ? "BULLISH" : "BEARISH";
-      }
-
-      // Step C: Draw Real Position Tool on Chart
-      const tpPct = 0.02; // 2% Target
-      const slPct = 0.008; // 0.8% Stoploss
-      
-      if (backendTrend === "BULLISH") {
-         tpPrice = currentPrice + (currentPrice * tpPct);
-         slPrice = currentPrice - (currentPrice * slPct);
-         drawPositionTool(lastTime, currentPrice, tpPrice, slPrice, true);
-         aiReportText = `Bada Bhai AI Alert for ${currentSymbol}. Trend is Bullish. RSI is at ${rsi}. Entry near ${currentPrice}. Target set at ${tpPrice}. Stop Loss at ${slPrice}. Stay disciplined.`;
-      } else {
-         tpPrice = currentPrice - (currentPrice * tpPct);
-         slPrice = currentPrice + (currentPrice * slPct);
-         drawPositionTool(lastTime, currentPrice, tpPrice, slPrice, false);
-         aiReportText = `Bada Bhai AI Alert for ${currentSymbol}. Trend is Bearish. RSI indicates weakness. Entry near ${currentPrice}. Target set at ${tpPrice}. Stop Loss at ${slPrice}.`;
-      }
-
-      // Update Reasoning Box
-      document.getElementById('ai-reasoning').innerHTML = `
-        <div class="flex justify-between border-b border-cyan-800 pb-1">
-          <span class="text-cyan-400 font-bold">🎯 SIGNAL: ${backendTrend}</span>
-          <span class="text-gray-400">RSI: ${rsi}</span>
-        </div>
-        <div>Entry: <span class="text-white font-mono">${currentPrice.toFixed(4)}</span></div>
-        <div class="text-emerald-400">Target (TP): <span class="font-mono">${tpPrice.toFixed(4)}</span></div>
-        <div class="text-red-400">Stop Loss (SL): <span class="font-mono">${slPrice.toFixed(4)}</span></div>
-        <div class="text-gray-500 text-[9px] mt-1 italic">Drawn purely on live market structure & quant backend.</div>
-      `;
-    }
-
-    function initLightweightChart() {
-      const container = document.getElementById('ai_chart');
-      container.innerHTML = '';
-      aiChartInstance = LightweightCharts.createChart(container, {
-        layout: { background: { type: 'solid', color: '#050505' }, textColor: '#9ca3af' },
-        grid: { vertLines: { color: 'rgba(31, 41, 55, 0.4)' }, horzLines: { color: 'rgba(31, 41, 55, 0.4)' } },
-        timeScale: { timeVisible: true }
-      });
-      candleSeries = aiChartInstance.addCandlestickSeries({ upColor: '#10b981', downColor: '#ef4444', borderVisible: false, wickUpColor: '#10b981', wickDownColor: '#ef4444' });
-    }
-
-    function drawPositionTool(timeStr, entry, tp, sl, isLong) {
-      const futureTime = timeStr + (3600 * 4); // Draw box forward
-      const tpColor = isLong ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.3)';
-      const slColor = isLong ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.3)';
-
-      const tpArea = aiChartInstance.addAreaSeries({ topColor: tpColor, bottomColor: tpColor, lineColor: '#10b981', lineWidth: 2 });
-      tpArea.setData([{time: timeStr, value: entry}, {time: futureTime, value: tp}]);
-
-      const slArea = aiChartInstance.addAreaSeries({ topColor: slColor, bottomColor: slColor, lineColor: '#ef4444', lineWidth: 2 });
-      slArea.setData([{time: timeStr, value: entry}, {time: futureTime, value: sl}]);
-      
-      aiChartInstance.timeScale().fitContent();
-    }
-
-    // 4. REAL VOICE ENGINE (TEXT TO SPEECH)
-    function playAIVoice() {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); 
-        const utterance = new SpeechSynthesisUtterance(aiReportText);
-        utterance.rate = 0.9;
-        utterance.pitch = 1;
-        utterance.lang = 'en-US';
-        window.speechSynthesis.speak(utterance);
-      } else {
-        alert("Voice not supported on this browser.");
-      }
-    }
-
-    // 5. REAL MACRO NEWS (Cryptopanic / RSS Alternative)
-    async function fetchMacroNews() {
-      document.getElementById('screen-main').classList.remove('screen-active');
-      document.getElementById('screen-main').style.transform = 'translateX(-100%)';
-      document.getElementById('screen-news').classList.remove('screen-hidden-right');
-      document.getElementById('screen-news').classList.add('screen-active');
-      
-      const newsBox = document.getElementById('dynamic-news');
-      newsBox.innerHTML = '<div class="text-center text-purple-400 mt-5">Fetching Global Macro News...</div>';
-      
-      try {
-        // Using CoinGecko public news API for real non-scripted data
-        const res = await fetch('https://api.coingecko.com/api/v3/news');
-        const data = await res.json();
-        newsBox.innerHTML = '';
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        data.data.slice(0, 10).forEach(news => {
-           newsBox.innerHTML += `
-            <a href="${news.url}" target="_blank" class="block p-3 glass rounded border-gray-800 border-l-2 border-l-purple-500 hover:bg-gray-900 transition mb-2">
-              <div class="flex justify-between items-center mb-1">
-                <span class="text-[9px] text-purple-400 bg-purple-900/20 px-1 rounded">${news.author || 'Global News'}</span>
-                <span class="text-[9px] text-gray-500">Real-Time</span>
-              </div>
-              <div class="text-xs font-bold text-gray-200">${news.title}</div>
-            </a>
-           `;
-        });
-      } catch (err) {
-        newsBox.innerHTML = '<div class="text-red-400 text-center">Failed to fetch news. Check connection.</div>';
-      }
-    }
+        body { 
+            background-color: var(--bg-base); color: var(--text-main); 
+            display: flex; flex-direction: column; height: 100vh; overflow: hidden; 
+            overscroll-behavior-y: none;
+        }
 
-    // BACK NAVIGATION
-    function closeScreens() {
-      document.getElementById('screen-prediction').classList.remove('screen-active');
-      document.getElementById('screen-prediction').classList.add('screen-hidden-right');
-      document.getElementById('screen-news').classList.remove('screen-active');
-      document.getElementById('screen-news').classList.add('screen-hidden-right');
-      const mainScreen = document.getElementById('screen-main');
-      mainScreen.style.transform = 'translateX(0)';
-      mainScreen.classList.add('screen-active');
-      window.speechSynthesis.cancel(); // Stop voice when going back
-    }
-  </script>
+        /* 2. Scrollbar hiding for smooth app feel */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+
+        /* 3. Global Top Navigation Header */
+        .app-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px; background: var(--bg-panel); border-bottom: 1px solid var(--border);
+            z-index: 100; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        
+        .brand-zone { display: flex; align-items: center; gap: 10px; }
+        .ws-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); box-shadow: 0 0 10px var(--red); transition: 0.3s;}
+        .ws-dot.connected { background: var(--green); box-shadow: 0 0 10px var(--green); animation: pulse 2s infinite;}
+        .brand-title { font-size: 18px; font-weight: 900; letter-spacing: 0.5px; color: #fff;}
+        .brand-title span { color: var(--accent); }
+
+        /* Dedicated Search Bar (Coin Selector) */
+        .search-wrapper {
+            display: flex; align-items: center; background: var(--bg-hover);
+            border-radius: 8px; padding: 6px 12px; border: 1px solid transparent;
+            transition: 0.2s; width: 130px;
+        }
+        .search-wrapper:focus-within { border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+        .search-wrapper i { color: var(--text-muted); font-size: 14px; margin-right: 8px;}
+        .search-wrapper input {
+            background: transparent; border: none; color: white; width: 100%;
+            font-size: 14px; font-weight: 800; outline: none; text-transform: uppercase;
+        }
+
+        /* 4. App Main Screens Container */
+        .app-main { flex: 1; position: relative; width: 100%; background: var(--bg-base); overflow: hidden; }
+        
+        .screen { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            display: none; overflow-y: auto; padding-bottom: calc(80px + var(--safe-area-bottom)); 
+        }
+        .screen.active { display: block; animation: slideIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* 5. Typography & Reusable Components */
+        .page-title { padding: 16px; font-size: 22px; font-weight: 900; background: var(--bg-panel); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
+        .text-up { color: var(--green); }
+        .text-down { color: var(--red); }
+        .text-muted { color: var(--text-muted); font-size: 12px; }
+        .flex-row { display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Cards */
+        .card { background: var(--bg-panel); margin: 12px; border-radius: 12px; padding: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.2);}
+        
+        /* Skeleton Loader (Binance style shimmer) */
+        .skeleton { background: linear-gradient(90deg, var(--bg-hover) 25%, #3a414c 50%, var(--bg-hover) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* 6. SCREEN 1: TradingView Chart */
+        #tv_chart_container { width: 100%; height: 100%; }
+
+        /* 7. SCREEN 2: Whale Orderbook */
+        .ob-header { display: flex; justify-content: space-between; padding: 10px 16px; font-size: 11px; font-weight: bold; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+        .ob-row { display: flex; justify-content: space-between; padding: 6px 16px; font-family: monospace; font-size: 13px; position: relative; z-index: 1; font-weight: 600;}
+        .ob-row::before { content: ""; position: absolute; top: 0; right: 0; height: 100%; z-index: -1; transition: width 0.3s; }
+        .ob-ask { color: var(--red); }
+        .ob-ask::before { background: var(--red-glow); }
+        .ob-bid { color: var(--green); }
+        .ob-bid::before { background: var(--green-glow); }
+        .spread-box { text-align: center; padding: 8px; font-weight: 900; font-size: 16px; color: var(--accent); background: var(--bg-hover); margin: 5px 0; }
+
+        /* 8. SCREEN 3: Volume Screener */
+        .coin-list-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--border); transition: 0.2s;}
+        .coin-list-item:active { background: var(--bg-hover); }
+        .coin-sym { font-size: 16px; font-weight: 800; }
+        .coin-vol { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .coin-price { font-size: 15px; font-weight: 700; text-align: right; font-family: monospace;}
+        .coin-change { font-size: 12px; text-align: right; margin-top: 4px; font-weight: bold;}
+
+        /* 9. SCREEN 4: Coin Info & News */
+        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .metric-box { background: var(--bg-hover); padding: 12px; border-radius: 8px; }
+        .metric-val { font-size: 18px; font-weight: 900; margin-top: 4px; color: #fff;}
+        .news-item { padding: 14px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;}
+        .news-title { font-size: 14px; font-weight: 600; line-height: 1.4; color: #fff; }
+        .news-meta { font-size: 11px; font-weight: bold; }
+
+        /* 10. SCREEN 5: Logs / Terminal */
+        .hacker-console { font-family: 'Courier New', monospace; font-size: 11px; color: #0ecb81; padding: 16px; line-height: 1.6; word-wrap: break-word; }
+        .log-entry { margin-bottom: 8px; border-bottom: 1px dashed rgba(14, 203, 129, 0.2); padding-bottom: 4px;}
+
+        /* 11. HOLOGRAPHIC PREDICTOR (THE GOD MODE DASHBOARD) */
+        .predictor-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 199; display: none; backdrop-filter: blur(5px);
+        }
+        .predictor-overlay.active { display: block; animation: fadeIn 0.3s; }
+        
+        .predictor-panel {
+            position: absolute; bottom: -100%; left: 0; width: 100%; height: 92%;
+            background: var(--bg-panel); border-top-left-radius: 24px; border-top-right-radius: 24px;
+            z-index: 200; display: flex; flex-direction: column; 
+            transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+            border-top: 1px solid var(--accent);
+        }
+        .predictor-panel.active { bottom: 0; }
+        
+        .drag-handle { width: 40px; height: 5px; background: var(--border); border-radius: 5px; margin: 12px auto; }
+        .panel-body { padding: 0 16px 20px 16px; overflow-y: auto; flex: 1; }
+        
+        /* Action Form */
+        .action-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .select-tf { flex: 0.4; background: var(--bg-hover); color: white; border: 1px solid var(--border); padding: 12px; border-radius: 10px; font-weight: bold; outline: none; appearance: none; text-align: center;}
+        .btn-mega { flex: 1; background: var(--accent); color: #000; border: none; border-radius: 10px; font-size: 16px; font-weight: 900; text-transform: uppercase; cursor: pointer; transition: 0.2s; box-shadow: 0 0 15px var(--accent-glow);}
+        .btn-mega:active { transform: scale(0.96); }
+
+        /* Results Matrix */
+        #pred_results { display: none; animation: slideIn 0.4s; }
+        .verdict-box { text-align: center; padding: 20px; background: var(--bg-hover); border-radius: 12px; margin-bottom: 16px; border: 1px solid var(--border);}
+        .verdict-title { font-size: 32px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-shadow: 0 0 20px rgba(255,255,255,0.2);}
+        
+        /* Targets Grid */
+        .target-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;}
+        .t-box { background: var(--bg-base); padding: 14px; border-radius: 10px; border: 1px solid var(--border); text-align: center; position: relative; overflow: hidden;}
+        .t-label { font-size: 10px; color: var(--text-muted); font-weight: 800; letter-spacing: 0.5px; margin-bottom: 4px; text-transform: uppercase;}
+        .t-val { font-size: 18px; font-weight: 900; font-family: monospace;}
+        
+        /* Specific Target Colors */
+        .b-entry { border-top: 3px solid var(--blue); }
+        .b-sl { border-top: 3px solid var(--red); }
+        .b-tp { border-top: 3px solid var(--green); }
+        .b-lev { border-top: 3px solid var(--accent); }
+
+        /* AI Voice Visualizer */
+        .voice-box { display: flex; align-items: center; gap: 15px; background: rgba(41, 98, 255, 0.1); border: 1px solid var(--blue); border-radius: 12px; padding: 16px; margin-bottom: 20px;}
+        .wave-container { display: flex; gap: 3px; height: 20px; align-items: center;}
+        .wave-bar { width: 4px; background: var(--blue); border-radius: 2px; animation: wave 1s infinite ease-in-out; }
+        .wave-bar:nth-child(2) { animation-delay: 0.2s; } .wave-bar:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes wave { 0%, 100% { height: 4px; } 50% { height: 20px; } }
+        .voice-text { font-size: 13px; color: #fff; font-weight: 600; line-height: 1.4; flex: 1;}
+
+        /* 12. BOTTOM NAVIGATION BAR (FLIPKART/BINANCE STYLE) */
+        .bottom-nav {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: var(--bg-panel); border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around; padding: 10px 5px calc(10px + var(--safe-area-bottom)) 5px;
+            z-index: 100; box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; transition: 0.2s; flex: 1; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; transition: 0.3s; }
+        .nav-item span { font-size: 10px; font-weight: 800; }
+        
+        .nav-item.active { color: var(--accent); }
+        .nav-item.active i { transform: translateY(-3px); text-shadow: 0 0 15px var(--accent-glow); }
+        
+        /* Central God Button */
+        .nav-center { position: relative; top: -20px; flex: 1; display: flex; justify-content: center;}
+        .god-btn { 
+            width: 54px; height: 54px; background: var(--accent); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 20px var(--accent-glow); border: 5px solid var(--bg-base);
+            color: #000; font-size: 24px; cursor: pointer; transition: 0.2s;
+        }
+        .god-btn:active { transform: scale(0.9); }
+
+        /* 13. Toast Notification */
+        .toast-container { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 10px; width: 90%; pointer-events: none;}
+        .toast { background: var(--bg-hover); color: white; padding: 12px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; border-left: 4px solid var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,0.5); animation: toastIn 0.3s; display: flex; align-items: center; gap: 10px;}
+        @keyframes toastIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div class="toast-container" id="toast_box"></div>
+
+    <!-- 1. GLOBAL HEADER -->
+    <div class="app-header">
+        <div class="brand-zone">
+            <div class="ws-dot" id="ws_dot"></div>
+            <div class="brand-title">GOD<span>ENGINE</span></div>
+        </div>
+        
+        <!-- The Master Coin Selector -->
+        <div class="search-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" id="global_search" value="BTC" onkeypress="handleGlobalSearch(event)" onblur="triggerCoinChange()">
+        </div>
+    </div>
+
+    <!-- 2. MAIN SCREENS CONTAINER -->
+    <div class="app-main">
+        
+        <!-- SCREEN 1: PRO TRADINGVIEW CHART -->
+        <div id="scr_chart" class="screen active">
+            <div id="tv_chart_container"></div>
+        </div>
+
+        <!-- SCREEN 2: WHALE ORDERBOOK -->
+        <div id="scr_orderbook" class="screen">
+            <div class="page-title">
+                Whale Depth <span id="ob_title" class="text-muted">BTC/USDT</span>
+            </div>
+            
+            <!-- Live Spread -->
+            <div class="spread-box" id="ob_spread">0.00 SPREAD</div>
+
+            <!-- Asks (Sells) -->
+            <div class="ob-header"><span>PRICE (USDT)</span><span>SIZE (VOL)</span></div>
+            <div id="ob_asks">
+                <!-- Skeletons initially -->
+                <div class="ob-row"><div class="skeleton" style="width:60px;height:15px;"></div><div class="skeleton" style="width:40px;height:15px;"></div></div>
+                <div class="ob-row"><div class="skeleton" style="width:60px;height:15px;"></div><div class="skeleton" style="width:40px;height:15px;"></div></div>
+            </div>
+            
+            <div style="height: 10px; background:var(--bg-panel); margin: 5px 0;"></div>
+
+            <!-- Bids (Buys) -->
+            <div class="ob-header"><span>PRICE (USDT)</span><span>SIZE (VOL)</span></div>
+            <div id="ob_bids">
+                <div class="ob-row"><div class="skeleton" style="width:60px;height:15px;"></div><div class="skeleton" style="width:40px;height:15px;"></div></div>
+                <div class="ob-row"><div class="skeleton" style="width:60px;height:15px;"></div><div class="skeleton" style="width:40px;height:15px;"></div></div>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: HOT ZONES (SCREENER) -->
+        <div id="scr_hot" class="screen">
+            <div class="page-title">Volume Breakouts <i class="fas fa-fire" style="color:#f6465d;"></i></div>
+            <div id="hot_list">
+                <!-- Loader -->
+                <div style="padding:40px; text-align:center;"><div class="skeleton" style="width:100%; height:60px; margin-bottom:10px; border-radius:12px;"></div><div class="skeleton" style="width:100%; height:60px; margin-bottom:10px; border-radius:12px;"></div></div>
+            </div>
+        </div>
+
+        <!-- SCREEN 4: COIN INFO & AI NEWS -->
+        <div id="scr_info" class="screen">
+            <div class="page-title">Coin Metrics <span id="info_title" class="text-muted">BTC</span></div>
+            
+            <div class="card metric-grid">
+                <div class="metric-box">
+                    <div class="text-muted" style="font-size:10px; font-weight:800;">GLOBAL RANK</div>
+                    <div class="metric-val" id="info_rank">#--</div>
+                </div>
+                <div class="metric-box">
+                    <div class="text-muted" style="font-size:10px; font-weight:800;">24H VOLUME</div>
+                    <div class="metric-val" id="info_vol" style="color:var(--accent);">$--</div>
+                </div>
+            </div>
+
+            <div class="page-title" style="border:none; padding-top:10px;">Neural News Feed</div>
+            <div class="card" id="info_news" style="margin-top:0;">
+                <div class="skeleton" style="width:100%; height:40px; margin-bottom:10px;"></div>
+                <div class="skeleton" style="width:100%; height:40px;"></div>
+            </div>
+        </div>
+
+        <!-- SCREEN 5: SYSTEM LOGS -->
+        <div id="scr_logs" class="screen">
+            <div class="page-title">Terminal Console <i class="fas fa-terminal text-muted"></i></div>
+            <div class="hacker-console" id="sys_logs">
+                <div class="log-entry">> Booting God Engine V_Omega...</div>
+                <div class="log-entry">> Establishing isolated WebSocket link...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 3. HOLOGRAPHIC PREDICTOR OVERLAY (GOD MODE) -->
+    <div class="predictor-overlay" id="pred_overlay" onclick="togglePredictor()"></div>
+    <div class="predictor-panel" id="pred_panel">
+        <div class="drag-handle" onclick="togglePredictor()"></div>
+        <div class="panel-body">
+            
+            <div class="flex-row" style="margin-bottom: 20px;">
+                <div>
+                    <div style="font-size:28px; font-weight:900;" id="panel_coin_title">BTC/USDT</div>
+                    <div class="text-muted" style="font-weight:bold;"><i class="fas fa-microchip"></i> Neural Matrix Active</div>
+                </div>
+                <!-- Timeframe Selector -->
+                <select id="pred_tf" class="select-tf">
+                    <option value="15m">15 Min</option>
+                    <option value="1h">1 Hour</option>
+                    <option value="4h">4 Hour</option>
+                </select>
+            </div>
+
+            <!-- Initiate Button -->
+            <button class="btn-mega" id="btn_scan" onclick="executeMatrixScan()"><i class="fas fa-bolt"></i> Execute Matrix Scan</button>
+
+            <!-- Results Section -->
+            <div id="pred_results">
+                
+                <!-- Verdict -->
+                <div class="verdict-box" id="res_verdict_box">
+                    <div class="verdict-title" id="res_trend">SCANNING...</div>
+                    <div class="text-muted" style="font-weight:800; font-size:11px;" id="res_acc">ANALYZING 50+ INDICATORS</div>
+                </div>
+
+                <!-- AI Voice Agent Report -->
+                <div class="voice-box">
+                    <div class="wave-container">
+                        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+                    </div>
+                    <div class="voice-text" id="res_ai_text">Awaiting execution protocol...</div>
+                </div>
+
+                <!-- Targets Grid -->
+                <div class="target-grid">
+                    <div class="t-box b-entry">
+                        <div class="t-label">Entry Zone</div>
+                        <div class="t-val" id="res_entry">0.00</div>
+                    </div>
+                    <div class="t-box b-lev">
+                        <div class="t-label">Leverage</div>
+                        <div class="t-val" style="color:var(--accent);" id="res_lev">1x</div>
+                    </div>
+                    <div class="t-box b-sl">
+                        <div class="t-label">Stop Loss</div>
+                        <div class="t-val text-down" id="res_sl">0.00</div>
+                    </div>
+                    <div class="t-box b-lev">
+                        <div class="t-label">Risk/Reward</div>
+                        <div class="t-val" style="color:var(--blue);" id="res_rr">1:0</div>
+                    </div>
+                    <div class="t-box b-tp">
+                        <div class="t-label">Take Profit 1</div>
+                        <div class="t-val text-up" id="res_tp1">0.00</div>
+                    </div>
+                    <div class="t-box b-tp">
+                        <div class="t-label">Take Profit 4 (Max)</div>
+                        <div class="t-val text-up" id="res_tp4">0.00</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. BOTTOM NAVIGATION -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchNav('scr_chart', this)"><i class="fas fa-chart-candlestick"></i><span>Chart</span></div>
+        <div class="nav-item" onclick="switchNav('scr_orderbook', this)"><i class="fas fa-water"></i><span>Depth</span></div>
+        
+        <div class="nav-center" onclick="togglePredictor()">
+            <div class="god-btn"><i class="fas fa-robot"></i></div>
+        </div>
+        
+        <div class="nav-item" onclick="switchNav('scr_hot', this)"><i class="fas fa-fire-flame-curved"></i><span>Hot</span></div>
+        <div class="nav-item" onclick="switchNav('scr_info', this)"><i class="fas fa-newspaper"></i><span>Info</span></div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- JAVASCRIPT: THE BRAIN & API CONNECTORS     -->
+    <!-- ========================================== -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        // --- STATE MANAGEMENT ---
+        let GLOBAL_COIN = "BTC";
+        let tvWidget = null;
+        let obInterval = null;
+
+        // --- INIT TELEGRAM & APP ---
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+        Telegram.WebApp.setHeaderColor('#181a20'); // Match Binance header
+        Telegram.WebApp.setBackgroundColor('#0b0e11');
+
+        window.onload = () => {
+            initTradingView(GLOBAL_COIN);
+            initWebSockets();
+            showToast("God Engine System Online", "success");
+        };
+
+        // --- UTILS: TOAST NOTIFICATIONS ---
+        function showToast(message, type="info") {
+            const box = document.getElementById('toast_box');
+            const color = type === 'error' ? 'var(--red)' : type === 'success' ? 'var(--green)' : 'var(--accent)';
+            const icon = type === 'error' ? 'fa-exclamation-triangle' : 'fa-check-circle';
+            
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.style.borderLeftColor = color;
+            t.innerHTML = `<i class="fas ${icon}" style="color:${color};"></i> <span>${message}</span>`;
+            
+            box.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; setTimeout(()=>t.remove(), 300); }, 3000);
+        }
+
+        // --- GLOBAL COIN SEARCH LOGIC ---
+        function handleGlobalSearch(e) {
+            if(e.key === 'Enter') {
+                e.target.blur(); // Triggers onblur -> triggerCoinChange
+            }
+        }
+
+        function triggerCoinChange() {
+            let input = document.getElementById('global_search').value.toUpperCase().trim();
+            if(!input || input === GLOBAL_COIN) return;
+            
+            // Format input properly
+            if(input.includes('/')) input = input.split('/')[0];
+            if(input.includes('USDT')) input = input.replace('USDT','');
+            
+            GLOBAL_COIN = input;
+            document.getElementById('global_search').value = GLOBAL_COIN;
+            
+            // Update UI Labels
+            document.getElementById('ob_title').innerText = `${GLOBAL_COIN}/USDT`;
+            document.getElementById('info_title').innerText = GLOBAL_COIN;
+            document.getElementById('panel_coin_title').innerText = `${GLOBAL_COIN}/USDT`;
+
+            // Reset Predictor UI
+            document.getElementById('pred_results').style.display = 'none';
+            document.getElementById('btn_scan').innerHTML = '<i class="fas fa-bolt"></i> Execute Matrix Scan';
+
+            showToast(`Isolated Agent assigned to ${GLOBAL_COIN}`, "success");
+
+            // Update Active Screen Data
+            updateTradingView();
+            let activeScreen = document.querySelector('.screen.active').id;
+            if(activeScreen === 'scr_orderbook') loadOrderBook();
+            if(activeScreen === 'scr_info') loadCoinInfo();
+        }
+
+        // --- TRADINGVIEW PRO WIDGET ---
+        function initTradingView(coin) {
+            tvWidget = new TradingView.widget({
+                "autosize": true,
+                "symbol": `KUCOIN:${coin}USDT`, // Uses KuCoin data visually
+                "interval": "15",
+                "timezone": "Asia/Kolkata",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "enable_publishing": false,
+                "backgroundColor": "#0b0e11",
+                "gridColor": "rgba(43, 49, 57, 0.5)",
+                "hide_top_toolbar": false,
+                "hide_side_toolbar": false, // Enables Pro Drawing Tools
+                "allow_symbol_change": false, // Handled globally by our search bar
+                "save_image": false,
+                "container_id": "tv_chart_container"
+            });
+        }
+
+        function updateTradingView() {
+            if(tvWidget) {
+                tvWidget.setSymbol(`KUCOIN:${GLOBAL_COIN}USDT`);
+            }
+        }
+
+        // --- SCREEN NAVIGATION LOGIC ---
+        function switchNav(screenId, navElement) {
+            // Close predictor if open
+            document.getElementById('pred_overlay').classList.remove('active');
+            document.getElementById('pred_panel').classList.remove('active');
+
+            // Manage Nav Active State
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            navElement.classList.add('active');
+
+            // Manage Screen Visibility
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+
+            // Trigger Specific Screen Data Load
+            clearInterval(obInterval); // Stop orderbook stream if leaving
+            if(screenId === 'scr_orderbook') loadOrderBook();
+            if(screenId === 'scr_hot') loadScreener();
+            if(screenId === 'scr_info') loadCoinInfo();
+        }
+
+        function togglePredictor() {
+            document.getElementById('pred_overlay').classList.toggle('active');
+            document.getElementById('pred_panel').classList.toggle('active');
+        }
+
+        // --- LIVE WEBSOCKETS (LOGS & STATUS) ---
+        function initWebSockets() {
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const wsLogs = new WebSocket(`${protocol}${window.location.host}/ws/logs`);
+            const dot = document.getElementById('ws_dot');
+            const consoleDiv = document.getElementById('sys_logs');
+
+            wsLogs.onopen = () => { dot.classList.add('connected'); };
+            wsLogs.onclose = () => { 
+                dot.classList.remove('connected'); 
+                showToast("Connection lost. Reconnecting...", "error");
+                setTimeout(initWebSockets, 3000); 
+            };
+            wsLogs.onmessage = (e) => {
+                try {
+                    let data = JSON.parse(e.data);
+                    if(data.type === 'new_log') {
+                        let timeMatch = data.payload.datetime_ist.match(/T(\d{2}:\d{2}:\d{2})/);
+                        let timeStr = timeMatch ? timeMatch[1] : "LIVE";
+                        let html = `<div class="log-entry">> [IST ${timeStr}] <span style="color:#fcd535">${data.payload.event}</span>: ${JSON.stringify(data.payload.data)}</div>`;
+                        consoleDiv.innerHTML = html + consoleDiv.innerHTML;
+                        if(consoleDiv.children.length > 50) consoleDiv.lastChild.remove();
+                    }
+                } catch(err) {}
+            };
+        }
+
+        // --- SCREEN: WHALE ORDERBOOK ---
+        async function fetchOrderBook() {
+            try {
+                let res = await fetch(`/api/orderbook?symbol=${GLOBAL_COIN}/USDT`);
+                let data = await res.json();
+                
+                document.getElementById('ob_spread').innerText = `${data.spread.toFixed(2)} SPREAD`;
+
+                // Calculate max depth for visual bars
+                let maxAskVol = Math.max(...data.asks.map(a => a.size));
+                let maxBidVol = Math.max(...data.bids.map(b => b.size));
+
+                // Render Asks (Sells - Top down)
+                let asksHtml = '';
+                data.asks.slice(0, 15).reverse().forEach(ask => {
+                    let pct = Math.min((ask.size / maxAskVol) * 100, 100);
+                    asksHtml += `<div class="ob-row ob-ask" style="--bg-width:${pct}%"><span>${ask.price.toFixed(4)}</span><span>${ask.size.toFixed(4)}</span><div style="position:absolute; top:0; right:0; height:100%; width:${pct}%; background:var(--red-glow); z-index:-1;"></div></div>`;
+                });
+                document.getElementById('ob_asks').innerHTML = asksHtml;
+
+                // Render Bids (Buys - Top down)
+                let bidsHtml = '';
+                data.bids.slice(0, 15).forEach(bid => {
+                    let pct = Math.min((bid.size / maxBidVol) * 100, 100);
+                    bidsHtml += `<div class="ob-row ob-bid"><span>${bid.price.toFixed(4)}</span><span>${bid.size.toFixed(4)}</span><div style="position:absolute; top:0; right:0; height:100%; width:${pct}%; background:var(--green-glow); z-index:-1;"></div></div>`;
+                });
+                document.getElementById('ob_bids').innerHTML = bidsHtml;
+
+            } catch(e) {
+                console.error("OB Error", e);
+            }
+        }
+        function loadOrderBook() {
+            document.getElementById('ob_asks').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);">Syncing Depth...</div>';
+            document.getElementById('ob_bids').innerHTML = '';
+            fetchOrderBook();
+            obInterval = setInterval(fetchOrderBook, 2000); // 2 second live refresh
+        }
+
+        // --- SCREEN: VOLUME SCREENER ---
+        async function loadScreener() {
+            const listObj = document.getElementById('hot_list');
+            listObj.innerHTML = '<div style="padding:40px; text-align:center;"><div class="skeleton" style="width:100%; height:60px; margin-bottom:10px; border-radius:12px;"></div></div>';
+            try {
+                let res = await fetch('/api/screener');
+                let data = await res.json();
+                if(data.status === 'success') {
+                    let html = '';
+                    data.hot_zones.forEach(coin => {
+                        let isUp = coin.change >= 0;
+                        let color = isUp ? 'var(--green)' : 'var(--red)';
+                        let icon = isUp ? 'fa-caret-up' : 'fa-caret-down';
+                        html += `
+                            <div class="coin-list-item" onclick="document.getElementById('global_search').value='${coin.symbol.split('/')[0]}'; triggerCoinChange(); switchNav('scr_chart', document.querySelector('.nav-item'));">
+                                <div>
+                                    <div class="coin-sym">${coin.symbol}</div>
+                                    <div class="coin-vol">Vol: ${(coin.volume/1000000).toFixed(2)}M</div>
+                                </div>
+                                <div>
+                                    <div class="coin-price">${coin.price.toFixed(4)}</div>
+                                    <div class="coin-change" style="color:${color};"><i class="fas ${icon}"></i> ${Math.abs(coin.change).toFixed(2)}%</div>
+                                </div>
+                            </div>`;
+                    });
+                    listObj.innerHTML = html;
+                }
+            } catch(e) { showToast("Screener failed to load", "error"); }
+        }
+
+        // --- SCREEN: COIN INFO & NEWS ---
+        async function loadCoinInfo() {
+            document.getElementById('info_rank').innerHTML = '<div class="skeleton" style="width:40px;height:20px;"></div>';
+            document.getElementById('info_vol').innerHTML = '<div class="skeleton" style="width:80px;height:20px;"></div>';
+            document.getElementById('info_news').innerHTML = '<div class="skeleton" style="width:100%; height:40px; margin-bottom:10px;"></div>';
+
+            try {
+                // Info
+                let iRes = await fetch(`/api/coin_info?symbol=${GLOBAL_COIN}USDT`);
+                let iData = await iRes.json();
+                document.getElementById('info_rank').innerText = `#${iData.rank}`;
+                document.getElementById('info_vol').innerText = `$${(iData.volume_24h/1000000).toFixed(2)}M`;
+
+                // News
+                let nRes = await fetch(`/api/news?symbol=${GLOBAL_COIN}USDT`);
+                let nData = await nRes.json();
+                let nHtml = '';
+                nData.data.forEach(n => {
+                    let c = n.sentiment.includes('BULL') ? 'var(--green)' : n.sentiment.includes('BEAR') ? 'var(--red)' : 'var(--text-muted)';
+                    nHtml += `<div class="news-item"><div class="news-title">${n.title}</div><div class="news-meta" style="color:${c};">${n.sentiment}</div></div>`;
+                });
+                document.getElementById('info_news').innerHTML = nHtml || '<div class="text-muted">No isolated news found.</div>';
+            } catch(e) { showToast("Info sync failed", "error"); }
+        }
+
+        // --- GOD MODE PREDICTOR & AI VOICE ---
+        async function executeMatrixScan() {
+            let tf = document.getElementById('pred_tf').value;
+            let symbol = `${GLOBAL_COIN}USDT`;
+            let btn = document.getElementById('btn_scan');
+            
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Processing...';
+            document.getElementById('pred_results').style.display = 'none';
+
+            try {
+                let res = await fetch(`/api/predict?symbol=${symbol}&timeframe=${tf}`);
+                let data = await res.json();
+
+                if(data.status === 'success') {
+                    btn.innerHTML = '<i class="fas fa-check"></i> Scan Complete';
+                    document.getElementById('pred_results').style.display = 'block';
+                    
+                    // Box Styling Logic
+                    let vBox = document.getElementById('res_verdict_box');
+                    let trendColor = data.position.action === 'LONG' ? 'var(--green)' : data.position.action === 'SHORT' ? 'var(--red)' : 'var(--accent)';
+                    let glowColor = data.position.action === 'LONG' ? 'var(--green-glow)' : data.position.action === 'SHORT' ? 'var(--red-glow)' : 'var(--accent-glow)';
+                    
+                    vBox.style.borderColor = trendColor;
+                    vBox.style.boxShadow = `0 0 20px ${glowColor}`;
+                    document.getElementById('res_trend').innerHTML = `<span style="color:${trendColor};">${data.overall_trend}</span>`;
+                    document.getElementById('res_acc').innerText = `MATH ACCURACY: ${data.accuracy_score} | PATTERN: ${data.confluence.candlestick_pattern}`;
+                    
+                    // Fill Grid
+                    document.getElementById('res_entry').innerText = data.position.entry_price;
+                    document.getElementById('res_lev').innerText = data.position.leverage_recommended;
+                    document.getElementById('res_sl').innerText = data.position.stop_loss;
+                    document.getElementById('res_tp1').innerText = data.position.take_profit_1;
+                    document.getElementById('res_tp4').innerText = data.position.take_profit_4;
+                    document.getElementById('res_rr').innerText = data.position.risk_reward;
+                    
+                    // AI Voice Integration
+                    let aiText = data.ai_agent_analysis;
+                    document.getElementById('res_ai_text').innerText = aiText;
+                    
+                    if ('speechSynthesis' in window) {
+                        window.speechSynthesis.cancel();
+                        let utterance = new SpeechSynthesisUtterance(aiText);
+                        utterance.rate = 1.05;
+                        utterance.pitch = 0.9;
+                        window.speechSynthesis.speak(utterance);
+                    }
+
+                    setTimeout(() => { btn.innerHTML = '<i class="fas fa-bolt"></i> Re-Execute Matrix'; }, 2000);
+                } else {
+                    btn.innerHTML = '<i class="fas fa-bolt"></i> Execute Matrix Scan';
+                    showToast("Exchange Sync Failed.", "error");
+                }
+            } catch(e) {
+                btn.innerHTML = '<i class="fas fa-bolt"></i> Execute Matrix Scan';
+                showToast("Neural Network Offline.", "error");
+            }
+        }
+    </script>
 </body>
 </html>
