@@ -3,189 +3,235 @@ import asyncio
 import io
 import ccxt.async_support as ccxt_async
 import pandas as pd
+import pandas_ta as ta
+import httpx
 from supabase import create_client, Client
+from motor.motor_asyncio import AsyncIOMotorClient
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 from fastapi import FastAPI
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from contextlib import asynccontextmanager
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from aiogram import F
-# --- CONFIGURATION ---
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 
-# 🔥 YAHAN APNI SUPABASE MASTER KEY (service_role) DAALNA MAT BHOOLNA 🔥
+# ==========================================
+# 1. VIP CONFIGURATION & DATABASES
+# ==========================================
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "YOUR_BOT_TOKEN")
+ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
+WEB_APP_URL = "https://meesho-grand-line.onrender.com"
+
+# 🗄️ SUPABASE: The Core Data Lake (Live OHLCV & Zip Archives)
 SUPABASE_URL = "https://sdlfggybitpoxczdeihq.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbGZnZ3liaXRwb3hjemRlaWhxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTEyMjAxOSwiZXhwIjoyMTA2Njk4MDE5fQ.-qa5c60tZf1viwGhQpYqiGq0vv0Fy9IfIbK7quID838"
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "YOUR_SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 SUPABASE_BUCKET = "quant-lake"
 
-# --- INITIALIZATION ---
+# 🧠 MONGODB: The AI Memory (For Future Logs, User Settings, Learning States)
+MONGO_URI = os.getenv("MONGO_URI", "YOUR_MONGO_URI")
+mongo_client = AsyncIOMotorClient(MONGO_URI)
+db = mongo_client["bada_bhai_ai_memory"]
+ai_logs_col = db["system_logs"]
+
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-is_harvesting = False
-harvest_status = {"status": "IDLE", "last_batch": "None", "errors": 0}
-
-class MasterDataPipeline:
+# ==========================================
+# 2. ALADDIN SCANNER (Supabase Powered)
+# ==========================================
+class AladdinScanner:
     def __init__(self):
         self.exchange = ccxt_async.kucoin({'enableRateLimit': True})
-    
-    async def upload_archive_async(self, df: pd.DataFrame, filename: str):
-        def _upload():
-            csv_buffer = io.BytesIO()
-            df.to_csv(csv_buffer, index=False, compression='gzip')
-            supabase.storage.from_(SUPABASE_BUCKET).upload(
-                path=filename,
-                file=csv_buffer.getvalue(),
-                file_options={"content-type": "application/gzip", "upsert": "true"}
-            )
-        await asyncio.to_thread(_upload)
-        
-    async def update_live_db(self, df: pd.DataFrame, symbol: str, timeframe: str):
-        def _update():
-            records = []
-            for _, row in df.iterrows():
-                records.append({
-                    "id": f"{symbol}_{timeframe}_{int(row['timestamp'])}",
-                    "symbol": symbol, "timeframe": timeframe, "timestamp": int(row['timestamp']),
-                    "open": float(row['open']), "high": float(row['high']),
-                    "low": float(row['low']), "close": float(row['close']), "volume": float(row['volume'])
-                })
-            supabase.table("live_ohlcv").upsert(records).execute()
-        await asyncio.to_thread(_update)
+        self.coins = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "DOGE/USDT", "BNB/USDT", "XRP/USDT"]
 
-    async def run_pipeline(self, bot_instance, chat_id, symbol="BTC/USDT", timeframe="15m"):
-        global is_harvesting, harvest_status
-        is_harvesting = True
-        harvest_status["status"] = "RUNNING"
-        
-        try:
-            checkpoint_id = f"{symbol}_{timeframe}"
-            res = supabase.table("harvest_checkpoints").select("last_timestamp").eq("id", checkpoint_id).execute()
-            
-            if len(res.data) > 0:
-                since = res.data[0]["last_timestamp"] + 1
-                await bot_instance.send_message(chat_id, f"🔄 Resuming from Checkpoint: {pd.to_datetime(since, unit='ms')}")
-            else:
-                since = self.exchange.parse8601('2025-01-01T00:00:00Z')
-                await bot_instance.send_message(chat_id, f"🚀 Fresh Start for {symbol}")
-
-            retry_count = 0
-            
-            while True:
-                try:
-                    ohlcv = await self.exchange.fetch_ohlcv(symbol, timeframe, since=since, limit=1000)
-                    if not ohlcv or len(ohlcv) < 2:
-                        await bot_instance.send_message(chat_id, f"✅ Pipeline Synced to LIVE Market!")
-                        harvest_status["status"] = "SYNCED"
-                        break
+    async def scan_market_24x7(self):
+        while True:
+            try:
+                for symbol in self.coins:
+                    ohlcv = await self.exchange.fetch_ohlcv(symbol, '15m', limit=100)
+                    if not ohlcv: continue
                     
                     df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-                    last_ts = int(df['timestamp'].iloc[-1])
                     
-                    filename = f"{symbol.replace('/','')}/{timeframe}/batch_{last_ts}.csv.gz"
-                    
-                    await asyncio.gather(
-                        self.upload_archive_async(df, filename),
-                        self.update_live_db(df, symbol, timeframe)
-                    )
-                    
-                    supabase.table("harvest_checkpoints").upsert({"id": checkpoint_id, "last_timestamp": last_ts}).execute()
-                    
-                    since = last_ts + 1
-                    retry_count = 0
-                    harvest_status["last_batch"] = str(pd.to_datetime(last_ts, unit='ms'))
-                    await asyncio.sleep(2)
-                    
-                except Exception as batch_err:
-                    retry_count += 1
-                    harvest_status["errors"] += 1
-                    if retry_count > 5: raise Exception(f"Failed after 5 retries. Error: {batch_err}")
-                    await asyncio.sleep(5 * retry_count)
-                    
-        except Exception as e:
-            harvest_status["status"] = f"ERROR: {e}"
-            await bot_instance.send_message(chat_id, f"⚠️ Pipeline Paused (Auto-resume ready). Error: {str(e)}")
-        finally:
-            await self.exchange.close()
-            is_harvesting = False
+                    # 1. LIVE DATA TO SUPABASE (Upsert)
+                    records = []
+                    for _, row in df.iterrows():
+                        records.append({
+                            "id": f"{symbol}_15m_{int(row['timestamp'])}",
+                            "symbol": symbol, "timeframe": "15m", "timestamp": int(row['timestamp']),
+                            "open": float(row['open']), "high": float(row['high']),
+                            "low": float(row['low']), "close": float(row['close']), "volume": float(row['volume'])
+                        })
+                    # Background task to not block scanner
+                    asyncio.create_task(asyncio.to_thread(supabase.table("live_ohlcv").upsert(records).execute))
 
-@dp.message(Command("harvest"))
-async def cmd_harvest(message: types.Message):
-    global is_harvesting
-    if ADMIN_ID != 0 and message.from_user.id != ADMIN_ID: return
-    if is_harvesting: return await message.answer("⚠️ Pipeline is already running!")
-    await message.answer("⚙ Starting Data Pipeline (Binance → Live DB + Storage Archive)...")
-    asyncio.create_task(MasterDataPipeline().run_pipeline(bot, message.chat.id, "BTC/USDT", "15m"))
+                    # 2. ARCHIVE TO SUPABASE BUCKET (Lifetime Storage)
+                    csv_buffer = io.BytesIO()
+                    df.to_csv(csv_buffer, index=False, compression='gzip')
+                    filename = f"archive/{symbol.replace('/','')}_latest.csv.gz"
+                    asyncio.create_task(asyncio.to_thread(
+                        supabase.storage.from_(SUPABASE_BUCKET).upload, filename, csv_buffer.getvalue(), {"upsert": "true"}
+                    ))
+                
+                await asyncio.sleep(60 * 5) # 5 Minute cycle
+            except Exception as e:
+                print(f"Scanner Error: {e}")
+                await asyncio.sleep(60)
 
-@dp.message(Command("status"))
-async def cmd_status(message: types.Message):
-    if ADMIN_ID != 0 and message.from_user.id != ADMIN_ID: return
-    res = supabase.table("harvest_checkpoints").select("*").execute()
-    chk_text = "\n".join([f"• {r['id']}: {pd.to_datetime(r['last_timestamp'], unit='ms')}" for r in res.data]) if res.data else "No checkpoints yet."
-    
-    text = (f"📊 **God Engine Pipeline Status**\n\n"
-            f"**Engine State:** `{harvest_status['status']}`\n"
-            f"**Last Sync:** `{harvest_status['last_batch']}`\n"
-            f"**Errors:** `{harvest_status['errors']}`\n\n"
-            f"**Checkpoints:**\n{chk_text}")
-    await message.answer(text, parse_mode="Markdown")
-# --- VIP CONTROL ROOM (THE DASHBOARD) ---
+# ==========================================
+# 3. FASTAPI SERVER & PRO API ENDPOINTS
+# ==========================================
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await bot.delete_webhook(drop_pending_updates=True)
+    asyncio.create_task(dp.start_polling(bot))
+    asyncio.create_task(AladdinScanner().scan_market_24x7())
+    # Log boot event to MongoDB
+    await ai_logs_col.insert_one({"event": "God Engine Boot", "status": "Online"})
+    yield
+
+api = FastAPI(lifespan=lifespan)
+api.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+@api.get("/")
+def serve_terminal():
+    return FileResponse("static/index.html")
+
+# --- API 1: HOT VOLUME & FEAR/GREED MACRO ---
+@api.get("/api/macro-status")
+async def get_macro_status():
+    """Volume aur Global Emotion check karega"""
+    try:
+        # Fear & Greed Index
+        async with httpx.AsyncClient() as client:
+            fg_res = await client.get("https://api.alternative.me/fng/")
+            fg_data = fg_res.json()['data'][0]
+            
+        exchange = ccxt_async.kucoin()
+        tickers = await exchange.fetch_tickers()
+        await exchange.close()
+        
+        usdt_pairs = {k: v for k, v in tickers.items() if '/USDT' in k and v['quoteVolume']}
+        sorted_pairs = sorted(usdt_pairs.items(), key=lambda x: x[1]['quoteVolume'], reverse=True)
+        hot_coins = [{"symbol": k.replace("/",""), "vol": v['quoteVolume']} for k,v in sorted_pairs[:10]]
+        
+        return JSONResponse({
+            "status": "success", 
+            "fear_greed": {"value": fg_data['value'], "emotion": fg_data['value_classification']},
+            "hot_volume": hot_coins
+        })
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)})
+
+# --- API 2: NEWS SCANNER WITH SENTIMENT ---
+@api.get("/api/news")
+async def get_global_news():
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get("https://api.coingecko.com/api/v3/news")
+            news_list = res.json().get('data', [])[:10]
+            
+            # Simple AI Sentiment Tagger
+            for news in news_list:
+                title = news['title'].lower()
+                if any(word in title for word in ['surge', 'bull', 'adopt', 'launch', 'high']):
+                    news['sentiment'] = "BULLISH 🟢"
+                elif any(word in title for word in ['hack', 'ban', 'drop', 'crash', 'sec']):
+                    news['sentiment'] = "BEARISH 🔴"
+                else:
+                    news['sentiment'] = "NEUTRAL ⚪"
+                    
+            return JSONResponse({"status": "success", "data": news_list})
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)})
+
+# --- API 3: THE SUPABASE MATH BRAIN ---
+@api.get("/api/predict")
+async def get_prediction(symbol: str = "BTCUSDT"):
+    try:
+        db_symbol = symbol.replace("USDT", "/USDT")
+        
+        # 🟢 FETCHING STRICTLY FROM SUPABASE NOW
+        res = supabase.table("live_ohlcv").select("*").eq("symbol", db_symbol).order("id", desc=True).limit(100).execute()
+        
+        if not res.data or len(res.data) < 50:
+            return JSONResponse({"status": "error", "message": "Supabase scanning data..."})
+            
+        df = pd.DataFrame(res.data)
+        df = df.iloc[::-1].reset_index(drop=True)
+        
+        # 🟢 HARDCORE MATH (RSI, MACD, BOLLINGER BANDS, ATR)
+        df['RSI'] = ta.rsi(df['close'], length=14)
+        macd = ta.macd(df['close'], fast=12, slow=26, signal=9)
+        df = pd.concat([df, macd], axis=1)
+        
+        # Bollinger Bands (Squeeze Detection)
+        bbands = ta.bbands(df['close'], length=20, std=2)
+        df = pd.concat([df, bbands], axis=1)
+        
+        df['ATR'] = ta.atr(df['high'], df['low'], df['close'], length=14)
+        
+        latest = df.iloc[-1]
+        current_price = latest['close']
+        recent_high = df['high'].rolling(window=20).max().iloc[-1]
+        recent_low = df['low'].rolling(window=20).min().iloc[-1]
+        
+        bb_width = (latest['BBU_20_2.0'] - latest['BBL_20_2.0']) / latest['BBM_20_2.0']
+        is_squeeze = bb_width < 0.05 # Volatility contraction (Big move coming)
+
+        # 🟢 THE AI VERDICT
+        trend = "NEUTRAL ⚖"
+        accuracy = 50
+        reason = "Market sideways hai, order block form ho raha hai."
+        
+        if latest['RSI'] < 35 and current_price <= (recent_low * 1.02):
+            trend = "BULLISH 🚀"
+            accuracy = 85
+            reason = "RSI oversold zone mein hai aur price key support se bounce le raha hai."
+        elif latest['RSI'] > 65 and current_price >= (recent_high * 0.98):
+            trend = "BEARISH 🩸"
+            accuracy = 82
+            reason = "RSI overbought hai, liquidity grab complete hua hai, rejection ke chances hain."
+            
+        if is_squeeze:
+            reason += " ⚠️ BOLLINGER SQUEEZE DETECTED: Bada breakout/breakdown aane wala hai!"
+
+        return JSONResponse({
+            "status": "success",
+            "price": current_price,
+            "rsi": round(latest['RSI'], 2),
+            "macd": round(latest['MACD_12_26_9'], 2),
+            "support": recent_low,
+            "resistance": recent_high,
+            "atr": latest['ATR'],
+            "trend": trend,
+            "reason": reason,
+            "accuracy": f"{accuracy}%"
+        })
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)})
+
+# ==========================================
+# 4. TELEGRAM UI
+# ==========================================
 @dp.message(Command("start", "panel"))
 async def cmd_panel(message: types.Message):
     if ADMIN_ID != 0 and message.from_user.id != ADMIN_ID: return
     
-    # 3 Buttons bana rahe hain
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="📊 Live Analysis", callback_data="btn_analysis")],
-        [InlineKeyboardButton(text="📈 Draw Chart", callback_data="btn_chart")],
-        [InlineKeyboardButton(text="⚙️ Engine Status", callback_data="btn_status")]
-    ])
-    
-    panel_text = (
-        "👑 **BADA BHAI : GOD ENGINE** 👑\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "System 24/7 Cloud par active hai. Data background mein jama ho raha hai.\n\n"
-        "Hukum karo mere bhai, kya check karna hai?"
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text="📱 OPEN BADA BHAI V7", web_app=WebAppInfo(url=WEB_APP_URL))]],
+        resize_keyboard=True
     )
-    await message.answer(panel_text, reply_markup=keyboard, parse_mode="Markdown")
-    # --- BUTTON CLICK HANDLERS ---
-@dp.callback_query(F.data == "btn_analysis")
-async def process_analysis(callback: CallbackQuery):
-    # Abhi ke liye sirf message dega, asli math hum aage likhenge
-    await callback.message.answer("🧠 Bada Bhai ka Data Science engine calculations kar raha hai... *(Logic aagle step mein)*", parse_mode="Markdown")
-    await callback.answer() # Button ki loading (ghoomna) rokne ke liye
-
-@dp.callback_query(F.data == "btn_chart")
-async def process_chart(callback: CallbackQuery):
-    # Abhi ke liye sirf message dega, chart draw karna aage aayega
-    await callback.message.answer("📈 Chart drawing AI start ho raha hai... *(Image generation aagle step mein)*", parse_mode="Markdown")
-    await callback.answer()
-
-@dp.callback_query(F.data == "btn_status")
-async def process_status(callback: CallbackQuery):
-    # Ye tumhara purana /status wala command hi chala dega
-    await cmd_status(callback.message)
-    await callback.answer()
-    
-# --- FASTAPI & BOT LIFECYCLE (Error Free) ---
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    print("🚀 Bada Bhai God Engine Started...")
-    await bot.delete_webhook(drop_pending_updates=True)
-    task = asyncio.create_task(dp.start_polling(bot))
-    yield
-    task.cancel()
-
-api = FastAPI(lifespan=lifespan)
-
-@api.get("/")
-def root():
-    return {"status": "Bada Bhai God Engine is LIVE!"}
+    await message.answer(
+        "👑 **BADA BHAI ALADDIN ENGINE ACTIVE**\n"
+        "⚡ Data Source: Supabase\n"
+        "🧠 AI Memory: MongoDB\n"
+        "Terminal kholne ke liye button daba 👇", 
+        reply_markup=keyboard
+    )
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run(api, host="0.0.0.0", port=port)
-    
