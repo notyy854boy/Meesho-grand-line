@@ -132,7 +132,44 @@ async def cmd_status(message: types.Message):
             f"**Errors:** `{harvest_status['errors']}`\n\n"
             f"**Checkpoints:**\n{chk_text}")
     await message.answer(text, parse_mode="Markdown")
+# --- VIP CONTROL ROOM (THE DASHBOARD) ---
+@dp.message(Command("start", "panel"))
+async def cmd_panel(message: types.Message):
+    if ADMIN_ID != 0 and message.from_user.id != ADMIN_ID: return
+    
+    # 3 Buttons bana rahe hain
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="📊 Live Analysis", callback_data="btn_analysis")],
+        [InlineKeyboardButton(text="📈 Draw Chart", callback_data="btn_chart")],
+        [InlineKeyboardButton(text="⚙️ Engine Status", callback_data="btn_status")]
+    ])
+    
+    panel_text = (
+        "👑 **BADA BHAI : GOD ENGINE** 👑\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "System 24/7 Cloud par active hai. Data background mein jama ho raha hai.\n\n"
+        "Hukum karo mere bhai, kya check karna hai?"
+    )
+    await message.answer(panel_text, reply_markup=keyboard, parse_mode="Markdown")
+    # --- BUTTON CLICK HANDLERS ---
+@dp.callback_query(F.data == "btn_analysis")
+async def process_analysis(callback: CallbackQuery):
+    # Abhi ke liye sirf message dega, asli math hum aage likhenge
+    await callback.message.answer("🧠 Bada Bhai ka Data Science engine calculations kar raha hai... *(Logic aagle step mein)*", parse_mode="Markdown")
+    await callback.answer() # Button ki loading (ghoomna) rokne ke liye
 
+@dp.callback_query(F.data == "btn_chart")
+async def process_chart(callback: CallbackQuery):
+    # Abhi ke liye sirf message dega, chart draw karna aage aayega
+    await callback.message.answer("📈 Chart drawing AI start ho raha hai... *(Image generation aagle step mein)*", parse_mode="Markdown")
+    await callback.answer()
+
+@dp.callback_query(F.data == "btn_status")
+async def process_status(callback: CallbackQuery):
+    # Ye tumhara purana /status wala command hi chala dega
+    await cmd_status(callback.message)
+    await callback.answer()
+    
 # --- FASTAPI & BOT LIFECYCLE (Error Free) ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
