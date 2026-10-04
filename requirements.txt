@@ -10,3 +10,4 @@ httpx
 dnspython
 websockets
 pydantic
+pytz
