@@ -1,7 +1,9 @@
 fastapi
 uvicorn
 aiogram
-ccxt
 pandas
+pandas_ta
+ccxt
 supabase
-python-dotenv
+motor
+httpx
