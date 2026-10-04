@@ -8,7 +8,6 @@ from fastapi.responses import FileResponse
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
-from motor.motor_asyncio import AsyncIOMotorClient
 import edge_tts
 from dotenv import load_dotenv
 import uvicorn
@@ -16,101 +15,96 @@ import uvicorn
 load_dotenv()
 
 # ==========================================
-# CREDENTIALS & CONFIG
+# CONFIGURATION
 # ==========================================
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
-MONGO_URI = os.getenv("MONGO_URI")
 MINI_APP_URL = os.getenv("MINI_APP_URL", "https://meesho-grand-line.onrender.com")
 
-# ==========================================
-# INITIALIZATION (FastAPI, MongoDB, Telegram)
-# ==========================================
 app = FastAPI()
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-# Avoid MongoDB connection error if URI is missing
-if MONGO_URI:
-    mongo_client = AsyncIOMotorClient(MONGO_URI)
-    db = mongo_client["bada_bhai_db"]
-    logs_collection = db["live_radar_logs"]
-
-# Serve the Mini App UI
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 active_ws_connections = []
-global_live_data = {"symbol": "BTCUSDT", "action": "BUY", "rr": "1:0.0"}
+# Multiple coins to track
+tracked_symbols = ["btcusdt", "ethusdt", "solusdt", "bnbusdt", "dogeusdt"]
 
 # ==========================================
-# BADA BHAI AI ENGINE (Built-in)
+# BADA BHAI AI ENGINE (Calculates Red/Green Box)
 # ==========================================
 class BadaBhaiQuantEngine:
     def __init__(self):
-        self.risk_reward_ratio = 4.0 # 1:4 ka Target
+        self.risk_reward_ratio = 4.0 # Always targets 1:4 RR
 
-    async def analyze_market_context(self, symbol, current_price):
+    def process_tick(self, symbol, current_price, price_change_pct):
         """
-        AI Brain logic: Calculates patterns and Risk/Reward parameters
+        Calculates Trend, Support/Resistance, Entry, SL, and TP for the chart box.
         """
-        print(f"[🧠 AI BRAIN] Analyzing {symbol} at {current_price}...")
-        decision = "BUY" if current_price > 60000 else "SELL"
-        sl_margin = current_price * 0.002  # 0.2% Stop Loss
-        
-        if decision == "BUY":
+        # Simulated logic based on price action momentum
+        if price_change_pct > 0:
+            decision = "BUY"
+            sl_margin = current_price * 0.005 # 0.5% Stop Loss
             entry = current_price
             sl = current_price - sl_margin
             tp = current_price + (sl_margin * self.risk_reward_ratio)
         else:
+            decision = "SELL"
+            sl_margin = current_price * 0.005 # 0.5% Stop Loss
             entry = current_price
             sl = current_price + sl_margin
             tp = current_price - (sl_margin * self.risk_reward_ratio)
 
         return {
-            "symbol": symbol,
-            "decision": decision,
-            "entry": round(entry, 2),
-            "sl": round(sl, 2),
-            "tp": round(tp, 2)
+            "symbol": symbol.upper(),
+            "price": current_price,
+            "change": round(price_change_pct, 2),
+            "action": decision,
+            "ai": {
+                "entry": entry,
+                "sl": sl,
+                "tp": tp
+            }
         }
 
 quant_engine = BadaBhaiQuantEngine()
 
 # ==========================================
-# BINANCE WEBSOCKET & SHADOW ENGINE
+# BINANCE MULTI-COIN WEBSOCKET
 # ==========================================
 async def binance_stream():
-    uri = "wss://stream.binance.com:9443/ws/btcusdt@ticker/ethusdt@ticker/solusdt@ticker"
-    global global_live_data
+    # Build stream URL for all tracked coins
+    streams = "/".join([f"{s}@ticker" for s in tracked_symbols])
+    uri = f"wss://stream.binance.com:9443/ws/{streams}"
+    
     while True:
         try:
             async with websockets.connect(uri) as ws:
-                print("⚡ Binance WebSocket Connected!")
+                print(f"⚡ Connected to Binance Multi-Stream: {streams}")
                 while True:
                     msg = await ws.recv()
                     data = json.loads(msg)
+                    
                     symbol = data.get("s", "")
                     price = float(data.get("c", 0.0))
+                    change = float(data.get("P", 0.0)) # Price change percentage
                     
-                    if "BTC" in symbol:
-                        # Process logic with AI Brain
-                        ai_result = await quant_engine.analyze_market_context(symbol, price)
-                        global_live_data["symbol"] = ai_result["symbol"]
-                        global_live_data["action"] = ai_result["decision"]
-                        global_live_data["rr"] = f"1:{quant_engine.risk_reward_ratio}"
-                        
-                        # Send to all connected Mini Apps
-                        for connection in active_ws_connections:
-                            try:
-                                await connection.send_json(global_live_data)
-                            except:
-                                pass
+                    # Run AI logic on this tick
+                    ai_payload = quant_engine.process_tick(symbol, price, change)
+                    
+                    # Broadcast to all frontend UI screens instantly
+                    for connection in active_ws_connections:
+                        try:
+                            await connection.send_json(ai_payload)
+                        except:
+                            pass
         except Exception as e:
-            print(f"Stream dropped, reconnecting... {e}")
+            print(f"Stream reconnecting... {e}")
             await asyncio.sleep(2)
 
 # ==========================================
-# FASTAPI ROUTES
+# ROUTES
 # ==========================================
 @app.get("/")
 async def root():
@@ -128,7 +122,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 @app.get("/api/voice")
 async def generate_voice():
-    text = f"Bhai, market mein volatility aayi hai. {global_live_data['symbol']} par nazar rakh."
+    text = "Bhai, naye crypto assets scan ho chuke hain. Live charts par focus rakho. Entry mark ho gayi hai."
     communicate = edge_tts.Communicate(text, "hi-IN-MadhurNeural")
     await communicate.save("alert.mp3")
     return FileResponse("alert.mp3", media_type="audio/mpeg")
@@ -138,27 +132,26 @@ async def generate_voice():
 # ==========================================
 @dp.message(Command("start"))
 async def start_cmd(message: types.Message):
-    # Only Admin (You) can use this bot
     if ADMIN_ID != 0 and message.from_user.id != ADMIN_ID:
         return await message.answer("Access Denied.")
         
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🚀 OPEN 4K APEX TERMINAL", web_app=WebAppInfo(url=MINI_APP_URL))]
+        [InlineKeyboardButton(text="🚀 OPEN APEX QUANT TERMINAL", web_app=WebAppInfo(url=MINI_APP_URL))]
     ])
     await message.answer(
-        "⚡ <b>BADA BHAI 2026 TERMINAL ONLINE</b>\n\n"
-        "Bhai, quant engine aur AI Brain live hai.\n"
-        "Click below to open the dashboard.",
+        "⚡ <b>BADA BHAI ALL-CRYPTO SCANNER ONLINE</b>\n\n"
+        "Bhai, system ab BTC, ETH, SOL, BNB, DOGE sabko ek sath track kar raha hai.\n"
+        "Terminal kholo, auto-drawing aur live screener active hai.",
         reply_markup=kb,
         parse_mode="HTML"
     )
 
 # ==========================================
-# MASTER RUNNER (FIXED FOR RENDER)
+# RUNNER
 # ==========================================
 @app.on_event("startup")
-async def start_background_processes():
-    print("🚀 Starting Bada Bhai Background Engines...")
+async def start_engines():
+    print("🚀 Booting Multi-Coin Engines...")
     asyncio.create_task(binance_stream())
     asyncio.create_task(dp.start_polling(bot))
 
