@@ -1,12 +1,7 @@
 fastapi
 uvicorn
-websockets
 aiogram
-motor
-edge-tts
-python-dotenv
-pydantic
 ccxt
-pymongo
 pandas
-pandas-ta
+supabase
+python-dotenv
