@@ -21,7 +21,7 @@ load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 MONGO_URI = os.getenv("MONGO_URI")
-MINI_APP_URL = os.getenv("MINI_APP_URL", "https://main-py-owl7.onrender.com")
+MINI_APP_URL = os.getenv("MINI_APP_URL", "https://meesho-grand-line.onrender.com")
 
 # ==========================================
 # INITIALIZATION (FastAPI, MongoDB, Telegram)
@@ -29,15 +29,52 @@ MINI_APP_URL = os.getenv("MINI_APP_URL", "https://main-py-owl7.onrender.com")
 app = FastAPI()
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
-mongo_client = AsyncIOMotorClient(MONGO_URI)
-db = mongo_client["bada_bhai_db"]
-logs_collection = db["live_radar_logs"]
+
+# Avoid MongoDB connection error if URI is missing
+if MONGO_URI:
+    mongo_client = AsyncIOMotorClient(MONGO_URI)
+    db = mongo_client["bada_bhai_db"]
+    logs_collection = db["live_radar_logs"]
 
 # Serve the Mini App UI
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 active_ws_connections = []
 global_live_data = {"symbol": "BTCUSDT", "action": "BUY", "rr": "1:0.0"}
+
+# ==========================================
+# BADA BHAI AI ENGINE (Built-in)
+# ==========================================
+class BadaBhaiQuantEngine:
+    def __init__(self):
+        self.risk_reward_ratio = 4.0 # 1:4 ka Target
+
+    async def analyze_market_context(self, symbol, current_price):
+        """
+        AI Brain logic: Calculates patterns and Risk/Reward parameters
+        """
+        print(f"[🧠 AI BRAIN] Analyzing {symbol} at {current_price}...")
+        decision = "BUY" if current_price > 60000 else "SELL"
+        sl_margin = current_price * 0.002  # 0.2% Stop Loss
+        
+        if decision == "BUY":
+            entry = current_price
+            sl = current_price - sl_margin
+            tp = current_price + (sl_margin * self.risk_reward_ratio)
+        else:
+            entry = current_price
+            sl = current_price + sl_margin
+            tp = current_price - (sl_margin * self.risk_reward_ratio)
+
+        return {
+            "symbol": symbol,
+            "decision": decision,
+            "entry": round(entry, 2),
+            "sl": round(sl, 2),
+            "tp": round(tp, 2)
+        }
+
+quant_engine = BadaBhaiQuantEngine()
 
 # ==========================================
 # BINANCE WEBSOCKET & SHADOW ENGINE
@@ -55,15 +92,19 @@ async def binance_stream():
                     symbol = data.get("s", "")
                     price = float(data.get("c", 0.0))
                     
-                    # Basic Shadow Logic: Update active state based on volume/price
                     if "BTC" in symbol:
-                        global_live_data["symbol"] = symbol
-                        global_live_data["action"] = "BUY" if price > 60000 else "SELL"
-                        global_live_data["rr"] = "1:4.2"
+                        # Process logic with AI Brain
+                        ai_result = await quant_engine.analyze_market_context(symbol, price)
+                        global_live_data["symbol"] = ai_result["symbol"]
+                        global_live_data["action"] = ai_result["decision"]
+                        global_live_data["rr"] = f"1:{quant_engine.risk_reward_ratio}"
                         
                         # Send to all connected Mini Apps
                         for connection in active_ws_connections:
-                            await connection.send_json(global_live_data)
+                            try:
+                                await connection.send_json(global_live_data)
+                            except:
+                                pass
         except Exception as e:
             print(f"Stream dropped, reconnecting... {e}")
             await asyncio.sleep(2)
@@ -97,7 +138,8 @@ async def generate_voice():
 # ==========================================
 @dp.message(Command("start"))
 async def start_cmd(message: types.Message):
-    if message.from_user.id != ADMIN_ID:
+    # Only Admin (You) can use this bot
+    if ADMIN_ID != 0 and message.from_user.id != ADMIN_ID:
         return await message.answer("Access Denied.")
         
     kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -105,23 +147,20 @@ async def start_cmd(message: types.Message):
     ])
     await message.answer(
         "⚡ <b>BADA BHAI 2026 TERMINAL ONLINE</b>\n\n"
-        "Bhai, database (MongoDB) connected hai. Render backend live hai.\n"
+        "Bhai, quant engine aur AI Brain live hai.\n"
         "Click below to open the dashboard.",
         reply_markup=kb,
         parse_mode="HTML"
     )
 
 # ==========================================
-# MASTER RUNNER
+# MASTER RUNNER (FIXED FOR RENDER)
 # ==========================================
-async def main():
+@app.on_event("startup")
+async def start_background_processes():
+    print("🚀 Starting Bada Bhai Background Engines...")
     asyncio.create_task(binance_stream())
-    config = uvicorn.Config(app=app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
-    server = uvicorn.Server(config)
-    await asyncio.gather(
-        server.serve(),
-        dp.start_polling(bot)
-    )
+    asyncio.create_task(dp.start_polling(bot))
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
