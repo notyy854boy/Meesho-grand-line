@@ -7,6 +7,8 @@ from supabase import create_client, Client
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from dotenv import load_dotenv
+from fastapi import FastAPI
+import uvicorn
 
 load_dotenv()
 
@@ -14,18 +16,16 @@ load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 
-# 🔥 TUMHARA EXACT SUPABASE URL (Fixed) 🔥
+# 🔥 DIRECT SUPABASE KEYS 🔥
 SUPABASE_URL = "https://sdlfggybitpoxczdeihq.supabase.co"
-
-# 👇 YAHAN APNI LAMBI WALI 'ANON PUBLIC' KEY DAAL DENA 👇
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbGZnZ3liaXRwb3hjemRlaWhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExMjIwMTksImV4cCI6MjEwNjY5ODAxOX0.EGG5Co2V8GACskfuLu-BO1mR2_67IhzC5EU1P5wSxcc"
-
 SUPABASE_BUCKET = "quant-lake"
 
 # --- INITIALIZATION ---
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+api = FastAPI()  # Dummy Web App for Render
 
 is_harvesting = False
 harvest_status = {"status": "IDLE", "last_batch": "None", "errors": 0}
@@ -135,9 +135,27 @@ async def cmd_status(message: types.Message):
             f"**Checkpoints:**\n{chk_text}")
     await message.answer(text, parse_mode="Markdown")
 
+# --- Render ke liye Dummy Web Server ---
+@api.get("/")
+async def root():
+    return {"status": "Bada Bhai God Engine is LIVE!"}
+
 async def main():
-    print("🚀 Bada Bhai God Engine Started...")
-    await dp.start_polling(bot)
+    print("🚀 Starting Web Server and Bot...")
+    
+    # 1. Telegram conflict auto-fix
+    await bot.delete_webhook(drop_pending_updates=True)
+    
+    # 2. Start Dummy Web Server for Render
+    port = int(os.environ.get("PORT", 8080))
+    config = uvicorn.Config(api, host="0.0.0.0", port=port, log_level="info")
+    server = uvicorn.Server(config)
+    
+    # 3. Run both Bot and Server together
+    await asyncio.gather(
+        server.serve(),
+        dp.start_polling(bot)
+    )
 
 if __name__ == "__main__":
     asyncio.run(main())
