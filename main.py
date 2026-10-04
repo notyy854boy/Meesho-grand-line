@@ -13,9 +13,14 @@ load_dotenv()
 # --- CONFIGURATION ---
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "quant-lake")
+
+# 🔥 TUMHARA EXACT SUPABASE URL (Fixed) 🔥
+SUPABASE_URL = "https://sdlfggybitpoxczdeihq.supabase.co"
+
+# 👇 YAHAN APNI LAMBI WALI 'ANON PUBLIC' KEY DAAL DENA 👇
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbGZnZ3liaXRwb3hjemRlaWhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExMjIwMTksImV4cCI6MjEwNjY5ODAxOX0.EGG5Co2V8GACskfuLu-BO1mR2_67IhzC5EU1P5wSxcc"
+
+SUPABASE_BUCKET = "quant-lake"
 
 # --- INITIALIZATION ---
 bot = Bot(token=BOT_TOKEN)
@@ -28,7 +33,7 @@ harvest_status = {"status": "IDLE", "last_batch": "None", "errors": 0}
 class MasterDataPipeline:
     def __init__(self):
         self.exchange = ccxt_async.binance({'enableRateLimit': True})
-
+    
     async def upload_archive_async(self, df: pd.DataFrame, filename: str):
         def _upload():
             csv_buffer = io.BytesIO()
@@ -39,7 +44,7 @@ class MasterDataPipeline:
                 file_options={"content-type": "application/gzip", "upsert": "true"}
             )
         await asyncio.to_thread(_upload)
-
+        
     async def update_live_db(self, df: pd.DataFrame, symbol: str, timeframe: str):
         def _update():
             records = []
@@ -57,11 +62,11 @@ class MasterDataPipeline:
         global is_harvesting, harvest_status
         is_harvesting = True
         harvest_status["status"] = "RUNNING"
-
+        
         try:
             checkpoint_id = f"{symbol}_{timeframe}"
             res = supabase.table("harvest_checkpoints").select("last_timestamp").eq("id", checkpoint_id).execute()
-
+            
             if len(res.data) > 0:
                 since = res.data[0]["last_timestamp"] + 1
                 await bot_instance.send_message(chat_id, f"🔄 Resuming from Checkpoint: {pd.to_datetime(since, unit='ms')}")
@@ -70,7 +75,7 @@ class MasterDataPipeline:
                 await bot_instance.send_message(chat_id, f"🚀 Fresh Start for {symbol}")
 
             retry_count = 0
-
+            
             while True:
                 try:
                     ohlcv = await self.exchange.fetch_ohlcv(symbol, timeframe, since=since, limit=1000)
@@ -78,30 +83,30 @@ class MasterDataPipeline:
                         await bot_instance.send_message(chat_id, f"✅ Pipeline Synced to LIVE Market!")
                         harvest_status["status"] = "SYNCED"
                         break
-
+                    
                     df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
                     last_ts = int(df['timestamp'].iloc[-1])
-
+                    
                     filename = f"{symbol.replace('/','')}/{timeframe}/batch_{last_ts}.csv.gz"
-
+                    
                     await asyncio.gather(
                         self.upload_archive_async(df, filename),
                         self.update_live_db(df, symbol, timeframe)
                     )
-
+                    
                     supabase.table("harvest_checkpoints").upsert({"id": checkpoint_id, "last_timestamp": last_ts}).execute()
-
+                    
                     since = last_ts + 1
                     retry_count = 0
                     harvest_status["last_batch"] = str(pd.to_datetime(last_ts, unit='ms'))
                     await asyncio.sleep(2)
-
+                    
                 except Exception as batch_err:
                     retry_count += 1
                     harvest_status["errors"] += 1
                     if retry_count > 5: raise Exception(f"Failed after 5 retries. Error: {batch_err}")
                     await asyncio.sleep(5 * retry_count)
-
+                    
         except Exception as e:
             harvest_status["status"] = f"ERROR: {e}"
             await bot_instance.send_message(chat_id, f"⚠️ Pipeline Paused (Auto-resume ready). Error: {str(e)}")
@@ -114,7 +119,7 @@ async def cmd_harvest(message: types.Message):
     global is_harvesting
     if ADMIN_ID != 0 and message.from_user.id != ADMIN_ID: return
     if is_harvesting: return await message.answer("⚠️ Pipeline is already running!")
-    await message.answer("⚙️️ Starting Data Pipeline (Binance → Live DB + Storage Archive)...")
+    await message.answer("⚙ Starting Data Pipeline (Binance → Live DB + Storage Archive)...")
     asyncio.create_task(MasterDataPipeline().run_pipeline(bot, message.chat.id, "BTC/USDT", "15m"))
 
 @dp.message(Command("status"))
@@ -122,7 +127,7 @@ async def cmd_status(message: types.Message):
     if ADMIN_ID != 0 and message.from_user.id != ADMIN_ID: return
     res = supabase.table("harvest_checkpoints").select("*").execute()
     chk_text = "\n".join([f"• {r['id']}: {pd.to_datetime(r['last_timestamp'], unit='ms')}" for r in res.data]) if res.data else "No checkpoints yet."
-
+    
     text = (f"📊 **God Engine Pipeline Status**\n\n"
             f"**Engine State:** `{harvest_status['status']}`\n"
             f"**Last Sync:** `{harvest_status['last_batch']}`\n"
