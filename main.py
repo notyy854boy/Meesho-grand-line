@@ -9,7 +9,8 @@ from aiogram.filters import Command
 from fastapi import FastAPI
 import uvicorn
 from contextlib import asynccontextmanager
-
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram import F
 # --- CONFIGURATION ---
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
