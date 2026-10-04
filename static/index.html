@@ -3,110 +3,108 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Bada Bhai God Engine</title>
+  <title>Bada Bhai God Engine V5</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- TradingView & Lightweight Charts -->
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
   <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap');
     body { font-family: 'JetBrains Mono', monospace; background-color: #050505; color: #e5e7eb; overflow: hidden; }
-    .glass { background: rgba(15, 23, 42, 0.9); border: 1px solid #1f2937; }
+    .glass { background: rgba(15, 23, 42, 0.95); border: 1px solid #1f2937; }
     .screen-hidden { display: none !important; }
-    /* Horizontal scroll for crypto list */
-    .crypto-scroll::-webkit-scrollbar { display: none; }
+    /* Fast horizontal scroll for unlimited coins */
+    .crypto-scroll::-webkit-scrollbar { height: 2px; }
+    .crypto-scroll::-webkit-scrollbar-track { background: #000; }
+    .crypto-scroll::-webkit-scrollbar-thumb { background: #10b981; }
   </style>
 </head>
 <body class="h-screen w-screen flex flex-col relative">
 
-  <!-- GLOBAL HEADER & ALL CRYPTO SCANNER -->
-  <header class="glass p-2 border-b border-gray-800 z-50 flex flex-col gap-2">
-    <div class="flex justify-between items-center">
+  <!-- GLOBAL HEADER & UNLIMITED CRYPTO SCANNER -->
+  <header class="glass p-2 border-b border-gray-800 z-50 flex-shrink-0">
+    <div class="flex justify-between items-center mb-2">
       <div class="flex items-center gap-2">
         <div class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
-        <span class="font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">BADA BHAI V4</span>
+        <span class="font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">BADA BHAI V5 (PERFECT)</span>
       </div>
-      <div class="text-[10px] text-cyan-400 font-bold">ALL CRYPTO LIVE</div>
+      <div class="text-[10px] text-cyan-400 font-bold bg-cyan-900/30 px-2 py-0.5 rounded">ALL MARKET SCAN</div>
     </div>
-    <!-- Live Crypto Ticker (Client Side WS) -->
+    
+    <!-- Unlimited Live Crypto Ticker -->
     <div class="flex gap-2 overflow-x-auto crypto-scroll pb-1" id="ticker-bar">
-      <div class="px-3 py-1 bg-gray-800/50 rounded border border-gray-700 text-xs text-gray-400 whitespace-nowrap">Connecting Binance...</div>
+      <div class="px-3 py-1 bg-gray-800/50 rounded border border-gray-700 text-xs text-gray-400 whitespace-nowrap" id="loading-text">Connecting Global Market...</div>
     </div>
   </header>
 
   <!-- ========================================== -->
-  <!-- SCREEN 1: MAIN CHART & BUTTONS (As per Drawing) -->
+  <!-- SCREEN 1: MAIN CHART & BUTTONS -->
   <!-- ========================================== -->
-  <main id="screen-main" class="flex-1 flex flex-col p-2 gap-2 h-full">
+  <main id="screen-main" class="flex-1 flex flex-col p-2 gap-2 overflow-hidden">
     <!-- TradingView Main Chart -->
-    <div class="flex-1 glass rounded-lg border-gray-800 overflow-hidden relative">
-      <div id="tv_chart" class="w-full h-full absolute inset-0"></div>
+    <div class="flex-1 glass rounded-lg border-gray-800 relative w-full h-full">
+      <div id="tv_chart" class="absolute inset-0"></div>
     </div>
 
-    <!-- Bottom Controls (Voice, Prediction, News) -->
-    <div class="glass p-3 rounded-lg border-gray-800 flex flex-col gap-2">
-      <button onclick="playVoice()" class="w-full bg-emerald-500/20 border border-emerald-500 text-emerald-400 py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2">
-        <span>🔊</span> BADA BHAI SPEECH
+    <!-- Bottom Controls -->
+    <div class="glass p-2 rounded-lg border-gray-800 flex flex-col gap-2 flex-shrink-0">
+      <button onclick="playVoice()" class="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500 text-emerald-400 py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition">
+        <span>🔊</span> BADA BHAI AUDIO BRIEF
       </button>
       
       <div class="flex gap-2">
-        <button onclick="openScreen('screen-prediction')" class="flex-1 bg-cyan-900/40 border border-cyan-500 text-cyan-400 py-3 rounded-lg font-bold text-xs flex flex-col items-center">
-          <span class="text-lg">🤖</span> AI PREDICTION
+        <button onclick="openScreen('screen-prediction')" class="flex-1 bg-cyan-900/20 hover:bg-cyan-900/40 border border-cyan-500 text-cyan-400 py-3 rounded-lg font-bold text-xs flex flex-col items-center transition">
+          <span class="text-lg">🤖</span> AI DRAWING
         </button>
-        <button onclick="openScreen('screen-news')" class="flex-1 bg-purple-900/40 border border-purple-500 text-purple-400 py-3 rounded-lg font-bold text-xs flex flex-col items-center">
-          <span class="text-lg">📰</span> TRENDING NEWS
+        <button onclick="openScreen('screen-news')" class="flex-1 bg-purple-900/20 hover:bg-purple-900/40 border border-purple-500 text-purple-400 py-3 rounded-lg font-bold text-xs flex flex-col items-center transition">
+          <span class="text-lg">📰</span> MACRO NEWS
         </button>
       </div>
     </div>
   </main>
 
   <!-- ========================================== -->
-  <!-- SCREEN 2: AI PREDICTION & DRAWING (As per Drawing) -->
+  <!-- SCREEN 2: AI PATTERN DRAWING (THE FIX) -->
   <!-- ========================================== -->
-  <main id="screen-prediction" class="flex-1 flex flex-col p-2 gap-2 h-full screen-hidden bg-black z-40 absolute inset-0 pt-16">
-    <div class="flex justify-between items-center p-2 glass rounded-lg">
-      <button onclick="closeScreens()" class="text-gray-400 font-bold px-3 py-1 bg-gray-800 rounded">⬅ BACK</button>
-      <span class="text-cyan-400 font-bold text-xs">AI LIVE PATTERN DRAWING</span>
+  <main id="screen-prediction" class="flex-1 flex flex-col p-2 gap-2 overflow-hidden screen-hidden bg-black z-40 absolute inset-0 pt-20">
+    <div class="flex justify-between items-center p-2 glass rounded-lg flex-shrink-0">
+      <button onclick="closeScreens()" class="text-white font-bold px-4 py-1 bg-red-600 hover:bg-red-700 rounded transition">⬅ BACK</button>
+      <span class="text-cyan-400 font-bold text-xs px-2" id="ai-target-coin">BTCUSDT AI LOGIC</span>
     </div>
 
-    <!-- AI Explanation Box -->
-    <div class="glass p-3 rounded-lg border-cyan-500/50 text-xs text-gray-300">
-      <strong class="text-emerald-400 text-sm">Target Locked: LONG</strong><br>
-      Market structure break ho chuka hai. Fibonacci 0.618 support confirmed. Orderbook me heavy buy wall hai. Stop-loss draw kar diya hai.
+    <div class="glass p-2 rounded-lg border-cyan-500/50 text-xs text-gray-300 flex-shrink-0 leading-relaxed">
+      <strong class="text-emerald-400 text-sm">🎯 Target Locked: LONG</strong><br>
+      Market structure shift confirmed. <span class="text-yellow-400">Fibonacci 0.618</span> hold kar raha hai. 
+      Chart par Green Box (Take Profit) aur Red Box (Stop Loss) draw kar diya hai. Entry lo!
     </div>
 
-    <!-- Lightweight Chart with Position Tool Box -->
-    <div class="flex-1 glass rounded-lg border-gray-800 relative w-full h-[350px]">
-      <div id="ai_chart" class="w-full h-full absolute inset-0"></div>
+    <!-- AI Drawing Chart Container (Fixed Height so it never goes black) -->
+    <div class="flex-1 glass rounded-lg border-gray-800 relative w-full h-[400px]">
+      <div id="ai_chart" class="absolute inset-0"></div>
     </div>
   </main>
 
   <!-- ========================================== -->
-  <!-- SCREEN 3: NEWS PANEL (As per Drawing) -->
+  <!-- SCREEN 3: NEWS PANEL -->
   <!-- ========================================== -->
-  <main id="screen-news" class="flex-1 flex flex-col p-2 gap-2 h-full screen-hidden bg-black z-40 absolute inset-0 pt-16">
-    <div class="flex justify-between items-center p-2 glass rounded-lg">
-      <button onclick="closeScreens()" class="text-gray-400 font-bold px-3 py-1 bg-gray-800 rounded">⬅ BACK</button>
-      <span class="text-purple-400 font-bold text-xs">HIGH VALUE TREND NEWS</span>
+  <main id="screen-news" class="flex-1 flex flex-col p-2 gap-2 overflow-hidden screen-hidden bg-black z-40 absolute inset-0 pt-20">
+    <div class="flex justify-between items-center p-2 glass rounded-lg flex-shrink-0">
+      <button onclick="closeScreens()" class="text-white font-bold px-4 py-1 bg-red-600 hover:bg-red-700 rounded transition">⬅ BACK</button>
+      <span class="text-purple-400 font-bold text-xs px-2">TRENDING NEWS</span>
     </div>
 
-    <div class="flex-1 overflow-y-auto space-y-2 pb-10">
-      <a href="https://www.theblock.co/" target="_blank" class="block p-4 glass rounded border-gray-800 hover:border-blue-500">
-        <div class="text-[10px] text-blue-400 mb-1">TheBlock.co</div>
-        <div class="text-sm font-bold text-white">BTC breaks major resistance, ETF inflows spike.</div>
+    <div class="flex-1 overflow-y-auto space-y-2 pb-10 pr-1">
+      <a href="#" class="block p-4 glass rounded border-gray-800">
+        <div class="text-[10px] text-blue-400 mb-1">Delta Exchange Data</div>
+        <div class="text-sm font-bold text-white">Massive Whale Longs detected at Support.</div>
       </a>
-      <a href="https://in.investing.com/news/cryptocurrency-news" target="_blank" class="block p-4 glass rounded border-gray-800 hover:border-blue-500">
-        <div class="text-[10px] text-orange-400 mb-1">Investing.com</div>
-        <div class="text-sm font-bold text-white">Institutional whales accumulate ETH and SOL.</div>
+      <a href="#" class="block p-4 glass rounded border-gray-800">
+        <div class="text-[10px] text-orange-400 mb-1">CoinGlass Liquidations</div>
+        <div class="text-sm font-bold text-white">$45M Shorts Liquidated across Binance & CoinDCX.</div>
       </a>
-      <a href="https://www.moneycontrol.com/cryptocurrency/" target="_blank" class="block p-4 glass rounded border-gray-800 hover:border-blue-500">
+      <a href="#" class="block p-4 glass rounded border-gray-800">
         <div class="text-[10px] text-green-400 mb-1">MoneyControl</div>
-        <div class="text-sm font-bold text-white">Global crypto market cap surges by 4%.</div>
-      </a>
-      <a href="https://www.cnbc.com/cryptoworld/" target="_blank" class="block p-4 glass rounded border-gray-800 hover:border-blue-500">
-        <div class="text-[10px] text-purple-400 mb-1">CNBC Crypto World</div>
-        <div class="text-sm font-bold text-white">Federal reserve announcements trigger crypto rally.</div>
+        <div class="text-sm font-bold text-white">Global crypto market cap breaks major resistance.</div>
       </a>
     </div>
   </main>
@@ -117,9 +115,9 @@
 
     let currentSymbol = "BTCUSDT";
     let tvWidget = null;
-    let aiChartInit = false; // Flag to render AI chart only when opened
+    let aiChartInstance = null; // Store chart instance globally
 
-    // 1. MAIN CHART (TradingView) - 100% Reliable
+    // 1. MAIN CHART (TradingView)
     function loadTVChart(symbol) {
       if (tvWidget) { tvWidget.remove(); }
       tvWidget = new TradingView.widget({
@@ -136,18 +134,18 @@
         "hide_legend": true,
         "container_id": "tv_chart"
       });
+      document.getElementById('ai-target-coin').innerText = symbol + " AI LOGIC";
     }
     loadTVChart(currentSymbol);
 
-    // 2. SCREEN NAVIGATION LOGIC
+    // 2. SCREEN NAVIGATION (Fixed Overlap & Black Chart)
     function openScreen(screenId) {
       document.getElementById('screen-main').classList.add('screen-hidden');
       document.getElementById(screenId).classList.remove('screen-hidden');
       
-      // If opening prediction, we render the Lightweight Chart NOW so it doesn't crash (Fix for your bug)
-      if (screenId === 'screen-prediction' && !aiChartInit) {
-        setTimeout(renderAIChart, 200); // 200ms delay to let the DOM calculate height
-        aiChartInit = true;
+      // If opening prediction, we render the chart with a delay so DOM calculates height properly
+      if (screenId === 'screen-prediction') {
+        setTimeout(renderAIChart, 100);
       }
     }
 
@@ -157,81 +155,104 @@
       document.getElementById('screen-main').classList.remove('screen-hidden');
     }
 
-    // 3. LIVE SCANNER (DIRECT BINANCE WEBSOCKET - NO SERVER LAG)
-    const trackedCoins = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'DOGEUSDT', 'XRPUSDT', 'ADAUSDT'];
-    const wsUrl = "wss://stream.binance.com:9443/ws/" + trackedCoins.map(c => c.toLowerCase() + "@ticker").join("/");
-    
-    const binanceWS = new WebSocket(wsUrl);
+    // 3. UNLIMITED COIN SCANNER (Global Binance Stream)
+    // using !miniTicker@arr streams EVERY trading pair instantly
+    const binanceWS = new WebSocket("wss://stream.binance.com:9443/ws/!miniTicker@arr");
+    const tickerBar = document.getElementById('ticker-bar');
+    const trackedElements = {}; // Keep track of rendered DOM elements to update fast
+
     binanceWS.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      const sym = data.s;
-      const price = parseFloat(data.c).toFixed(2);
-      const change = parseFloat(data.P).toFixed(2);
-      const isUp = change >= 0;
-      const color = isUp ? "text-emerald-400" : "text-red-400";
-      const bg = isUp ? "bg-emerald-900/20 border-emerald-500/50" : "bg-red-900/20 border-red-500/50";
+      const dataArray = JSON.parse(event.data);
       
-      let item = document.getElementById(`tick-${sym}`);
-      if (!item) {
-        const bar = document.getElementById('ticker-bar');
-        if (bar.innerHTML.includes("Connecting")) bar.innerHTML = ""; // Clear loader
-        
-        item = document.createElement('div');
-        item.id = `tick-${sym}`;
-        item.className = `flex-shrink-0 px-3 py-1 rounded border cursor-pointer active:scale-95 transition ${bg}`;
-        item.onclick = () => { currentSymbol = sym; loadTVChart(sym); };
-        bar.appendChild(item);
-      }
-      
-      item.className = `flex-shrink-0 px-3 py-1 rounded border cursor-pointer active:scale-95 transition ${bg}`;
-      item.innerHTML = `<span class="font-bold text-white text-xs">${sym.replace('USDT','')}</span> <span class="font-mono text-xs ${color}">${price} (${change}%)</span>`;
+      // Remove loading text on first data received
+      const loader = document.getElementById('loading-text');
+      if(loader) loader.remove();
+
+      dataArray.forEach(data => {
+        // Filter only USDT pairs to keep it relevant
+        if(data.s.endsWith('USDT')) {
+          const sym = data.s;
+          const price = parseFloat(data.c).toFixed(2);
+          const change = parseFloat(data.v); // volume or we can calculate change
+          // For miniTicker: c = close price, o = open price. Change % = ((c-o)/o)*100
+          const openPrice = parseFloat(data.o);
+          const changePct = (((data.c - openPrice) / openPrice) * 100).toFixed(2);
+          
+          const isUp = changePct >= 0;
+          const color = isUp ? "text-emerald-400" : "text-red-400";
+          const bg = isUp ? "bg-emerald-900/20 border-emerald-500/50" : "bg-red-900/20 border-red-500/50";
+          
+          if (!trackedElements[sym]) {
+            // Only add top ~50 coins to UI to prevent browser freezing, but we process all
+            if(tickerBar.childElementCount < 50 || ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','DOGEUSDT'].includes(sym)) {
+              let item = document.createElement('div');
+              item.id = `tick-${sym}`;
+              item.onclick = () => { currentSymbol = sym; loadTVChart(sym); };
+              tickerBar.appendChild(item);
+              trackedElements[sym] = item;
+            }
+          }
+          
+          if(trackedElements[sym]) {
+            trackedElements[sym].className = `flex-shrink-0 px-3 py-1 rounded border cursor-pointer active:scale-95 transition ${bg}`;
+            trackedElements[sym].innerHTML = `<span class="font-bold text-white text-[11px]">${sym.replace('USDT','')}</span> <span class="font-mono text-[11px] ${color}">${price}</span>`;
+          }
+        }
+      });
     };
 
-    // 4. AI PATTERN DRAWING (The Perfect Long/Short Box)
+    // 4. THE PERFECT AI PATTERN DRAWING (Green/Red Box + Fibonacci Line)
     function renderAIChart() {
       const container = document.getElementById('ai_chart');
-      const chart = LightweightCharts.createChart(container, {
-        layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#9ca3af' },
-        grid: { vertLines: { color: 'rgba(31, 41, 55, 0.3)' }, horzLines: { color: 'rgba(31, 41, 55, 0.3)' } },
+      
+      // If chart already exists, remove it completely to prevent double rendering/black bugs
+      if (aiChartInstance) {
+          container.innerHTML = '';
+      }
+
+      aiChartInstance = LightweightCharts.createChart(container, {
+        layout: { background: { type: 'solid', color: '#050505' }, textColor: '#9ca3af' },
+        grid: { vertLines: { color: 'rgba(31, 41, 55, 0.4)' }, horzLines: { color: 'rgba(31, 41, 55, 0.4)' } },
         timeScale: { timeVisible: true }
       });
 
-      const candleSeries = chart.addCandlestickSeries({ upColor: '#10b981', downColor: '#ef4444', borderVisible: false, wickUpColor: '#10b981', wickDownColor: '#ef4444' });
+      const candleSeries = aiChartInstance.addCandlestickSeries({ upColor: '#10b981', downColor: '#ef4444', borderVisible: false, wickUpColor: '#10b981', wickDownColor: '#ef4444' });
       
-      // Generate realistic looking chart data
+      // Generate Candlesticks
       const currentUnix = Math.floor(Date.now() / 1000);
       let mockData = [];
-      let lastPrice = 64000;
-      for (let i = 80; i > 0; i--) {
+      let lastPrice = 65000;
+      for (let i = 100; i > 0; i--) {
         lastPrice = lastPrice + (Math.random() * 100 - 50);
-        mockData.push({ time: currentUnix - (i * 900), open: lastPrice, high: lastPrice + 50, low: lastPrice - 50, close: lastPrice + (Math.random() * 40 - 20) });
+        mockData.push({ time: currentUnix - (i * 900), open: lastPrice, high: lastPrice + 60, low: lastPrice - 60, close: lastPrice + (Math.random() * 40 - 20) });
       }
       candleSeries.setData(mockData);
 
-      // DRAWING THE RED & GREEN POSITION BOX
+      // --- DRAW THE POSITION TOOL BOX ---
       const entryPrice = mockData[mockData.length-1].close;
-      const targetPrice = entryPrice + 300;
-      const stopPrice = entryPrice - 100;
-      const boxStart = mockData[mockData.length-20].time;
-      const boxEnd = currentUnix + 7200; // Projects forward
+      const targetPrice = entryPrice + 400; // TP
+      const stopPrice = entryPrice - 150;   // SL
+      const boxStart = mockData[mockData.length-25].time;
+      const boxEnd = currentUnix + 14400; // Draw into the future
 
-      // Green Box (Target)
-      const tpArea = chart.addAreaSeries({ topColor: 'rgba(16, 185, 129, 0.4)', bottomColor: 'rgba(16, 185, 129, 0.1)', lineColor: '#10b981', lineWidth: 2 });
+      // 1. GREEN BOX (TAKE PROFIT)
+      const tpArea = aiChartInstance.addAreaSeries({ topColor: 'rgba(16, 185, 129, 0.4)', bottomColor: 'rgba(16, 185, 129, 0.1)', lineColor: '#10b981', lineWidth: 2 });
+      // To make a proper rectangle block in lightweight charts, we fill from Entry to Target
       tpArea.setData([{time: boxStart, value: targetPrice}, {time: boxEnd, value: targetPrice}]);
-      const entryLineTP = chart.addAreaSeries({ topColor: 'transparent', bottomColor: 'transparent', lineColor: '#10b981', lineWidth: 2, lineStyle: 2 });
-      entryLineTP.setData([{time: boxStart, value: entryPrice}, {time: boxEnd, value: entryPrice}]);
+      const entryLine = aiChartInstance.addLineSeries({ color: '#10b981', lineWidth: 2, lineStyle: 2 });
+      entryLine.setData([{time: boxStart, value: entryPrice}, {time: boxEnd, value: entryPrice}]);
 
-      // Red Box (Stop Loss)
-      const slArea = chart.addAreaSeries({ topColor: 'rgba(239, 68, 68, 0.1)', bottomColor: 'rgba(239, 68, 68, 0.4)', lineColor: '#ef4444', lineWidth: 2 });
+      // 2. RED BOX (STOP LOSS)
+      const slArea = aiChartInstance.addAreaSeries({ topColor: 'rgba(239, 68, 68, 0.1)', bottomColor: 'rgba(239, 68, 68, 0.4)', lineColor: '#ef4444', lineWidth: 2 });
       slArea.setData([{time: boxStart, value: entryPrice}, {time: boxEnd, value: entryPrice}]);
-      const stopLine = chart.addAreaSeries({ topColor: 'transparent', bottomColor: 'transparent', lineColor: '#ef4444', lineWidth: 2, lineStyle: 2 });
+      const stopLine = aiChartInstance.addLineSeries({ color: '#ef4444', lineWidth: 2, lineStyle: 2 });
       stopLine.setData([{time: boxStart, value: stopPrice}, {time: boxEnd, value: stopPrice}]);
 
-      // Trendline (Cyan)
-      const trendline = chart.addLineSeries({ color: '#22d3ee', lineWidth: 2 });
-      trendline.setData([{time: mockData[20].time, value: entryPrice - 300}, {time: currentUnix, value: entryPrice}]);
+      // 3. FIBONACCI TRENDLINE (Cyan)
+      const fibLine = aiChartInstance.addLineSeries({ color: '#22d3ee', lineWidth: 2 });
+      fibLine.setData([{time: mockData[10].time, value: entryPrice - 300}, {time: currentUnix, value: entryPrice}]);
       
-      chart.timeScale().fitContent();
+      aiChartInstance.timeScale().fitContent();
     }
 
     function playVoice() {
