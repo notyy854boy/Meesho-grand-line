@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>God Engine | Native App</title>
+    <!-- Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Zero Latency Lightweight Charts -->
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     
     <style>
@@ -28,7 +31,6 @@
 
         /* --- 1. FIXED TOP HEADER --- */
         .header { display: flex; flex-direction: column; background: var(--bg-panel); border-bottom: 1px solid var(--border); z-index: 100; flex-shrink: 0;}
-        
         .header-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; }
         .logo-area { display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 16px; letter-spacing: 0.5px;}
         .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: pulse 1.5s infinite; }
@@ -37,7 +39,6 @@
         .search-area:focus-within { border-color: var(--accent); }
         .search-area input { background: transparent; border: none; color: #fff; width: 100%; font-weight: 900; outline: none; text-transform: uppercase; font-size: 14px;}
         
-        /* Tool Bar (AI Models) */
         .toolbar { display: flex; justify-content: space-between; padding: 8px 15px; background: var(--bg-base); border-top: 1px solid var(--border); align-items: center;}
         .ai-select { background: var(--bg-panel); color: var(--accent); border: 1px solid var(--border); padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; outline: none;}
         .live-price { font-family: var(--font-mono); font-size: 18px; font-weight: 900; }
@@ -52,11 +53,10 @@
 
         /* Chart */
         #tv_chart { width: 100%; height: 100%; position: relative;}
-        .chart-loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--text-muted); font-size: 14px; font-weight: bold; z-index: 10;}
+        .chart-loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--text-muted); font-size: 14px; font-weight: bold; z-index: 10; display: none;}
 
         /* Generic UI Elements */
         .section-header { padding: 12px 15px; font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; background: var(--bg-panel); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border);}
-        .card { background: var(--bg-panel); margin: 12px 15px; border-radius: 12px; padding: 15px; border: 1px solid var(--border); }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .grid-box { background: var(--bg-hover); padding: 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 4px; border: 1px solid transparent;}
         .label-sm { font-size: 10px; color: var(--text-muted); font-weight: 800; }
@@ -72,7 +72,7 @@
         .hot-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border); transition: 0.2s;}
         .hot-row:active { background: var(--bg-hover); }
 
-        /* --- 3. THE GOD PREDICTOR MODAL (CLEAN & FIXED) --- */
+        /* --- 3. THE GOD PREDICTOR MODAL --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 900; display: none; }
         .modal-content { position: fixed; bottom: -100%; left: 0; width: 100%; max-height: 85vh; background: var(--bg-panel); border-top: 2px solid var(--accent); border-radius: 24px 24px 0 0; z-index: 1000; transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);}
         .modal-content.open { bottom: 0; }
@@ -80,8 +80,12 @@
         .drag-bar { width: 40px; height: 5px; background: var(--text-muted); border-radius: 5px; margin: 12px auto; }
         .modal-scroll { padding: 0 15px 30px 15px; overflow-y: auto; flex: 1;}
         
+        .timer-display { text-align: center; font-size: 42px; font-weight: 900; color: var(--accent); padding: 30px 0; font-family: var(--font-mono); display: none;}
+        .pred-btn-main { width: 100%; background: var(--accent); color: #000; border: none; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: 900; text-transform: uppercase; cursor: pointer; margin-bottom: 10px; transition: 0.2s;}
+        .pred-btn-main:disabled { background: var(--text-muted); cursor: not-allowed; }
+
         /* Sequential Loader */
-        .seq-loader { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px 0; gap: 15px;}
+        .seq-loader { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px 0; gap: 15px;}
         .step-text { font-family: var(--font-mono); font-size: 13px; color: var(--accent); font-weight: bold;}
         .progress-bar { width: 80%; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
         .progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.4s; }
@@ -93,7 +97,7 @@
         
         .ai-report { margin-top: 15px; padding: 15px; background: rgba(59, 130, 246, 0.1); border: 1px solid var(--blue); border-radius: 8px; font-size: 13px; line-height: 1.5; color: #fff;}
 
-        /* --- 4. FIXED BOTTOM NAVIGATION (UNBREAKABLE) --- */
+        /* --- 4. FIXED BOTTOM NAVIGATION --- */
         .bottom-nav { 
             position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; 
             background: var(--bg-panel); border-top: 1px solid var(--border); 
@@ -168,7 +172,7 @@
             <div id="hot_list"><div style="text-align:center; padding:20px; color:var(--text-muted);">Scanning...</div></div>
         </div>
 
-        <!-- INFO & NEWS -->
+        <!-- INFO -->
         <div id="scr_info" class="screen">
             <div class="section-header">Coin Metrics</div>
             <div class="grid-2" style="padding: 15px;">
@@ -185,7 +189,6 @@
         <div class="nav-item active" onclick="switchScreen('scr_chart', this)"><i class="fas fa-chart-line"></i><span>Chart</span></div>
         <div class="nav-item" onclick="switchScreen('scr_depth', this)"><i class="fas fa-water"></i><span>Depth</span></div>
         
-        <!-- BIG PREDICT BUTTON -->
         <div class="nav-center" onclick="openPredictor()">
             <div class="predict-btn"><i class="fas fa-robot"></i></div>
         </div>
@@ -194,7 +197,7 @@
         <div class="nav-item" onclick="switchScreen('scr_info', this)"><i class="fas fa-newspaper"></i><span>Info</span></div>
     </div>
 
-    <!-- 4. GOD PREDICTOR MODAL (SEQUENTIAL) -->
+    <!-- 4. GOD PREDICTOR MODAL (WITH TIMER) -->
     <div class="modal-overlay" id="pred_overlay" onclick="closePredictor()"></div>
     <div class="modal-content" id="pred_modal">
         <div class="drag-bar" onclick="closePredictor()"></div>
@@ -202,8 +205,12 @@
             
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
                 <div style="font-size:24px; font-weight:900;" id="pred_title_coin">BTC/USDT</div>
-                <button onclick="startPredictionSequence()" style="background:var(--accent); border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer;"><i class="fas fa-bolt"></i> RUN</button>
+                <div style="font-size:12px; color:var(--text-muted); font-weight:bold;"><i class="fas fa-microchip"></i> Matrix Standby</div>
             </div>
+
+            <!-- Execution Button & Timer -->
+            <button class="pred-btn-main" id="btn_run" onclick="startPredictionSequence()">⚡ INITIATE SCAN</button>
+            <div class="timer-display" id="timer_display">3</div>
 
             <!-- Sequential Loading Animation -->
             <div class="seq-loader" id="seq_loader">
@@ -239,19 +246,10 @@
     <!-- JAVASCRIPT: THE BRAIN & STATE MANAGER      -->
     <!-- ========================================== -->
     <script>
-        const AppState = {
-            coin: "BTC",
-            activeScreen: "scr_chart",
-            binanceWs: null,
-            obInterval: null,
-            priceLines: []
-        };
-
+        const AppState = { coin: "BTC", activeScreen: "scr_chart", binanceWs: null, timeoutIds: [], priceLines: [] };
         let chart, candleSeries;
 
-        // Init
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
+        Telegram.WebApp.ready(); Telegram.WebApp.expand();
         window.onload = () => { initChart(); setupCoin(AppState.coin); };
 
         function showToast(msg) {
@@ -260,11 +258,18 @@
             setTimeout(() => { t.style.display = 'none'; }, 3000);
         }
 
+        async function fetchWithTimeout(url, timeout=10000) {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            const res = await fetch(url, { signal: controller.signal });
+            clearTimeout(id);
+            return res;
+        }
+
         // --- 1. GLOBAL STATE MANAGER ---
         function executeCoinChange() {
             let input = document.getElementById('global_search').value.toUpperCase().replace('USDT','').trim();
             if(!input || input === AppState.coin) return;
-            
             document.getElementById('global_search').blur();
             setupCoin(input);
         }
@@ -274,56 +279,52 @@
             document.getElementById('global_search').value = AppState.coin;
             document.getElementById('pred_title_coin').innerText = `${AppState.coin}/USDT`;
             
-            // Clean UI
             document.getElementById('pred_results').style.display = 'none';
             removeAutoDrawLines();
             
             startLiveTicker();
             loadChartData();
             
-            // Smart Refresh
-            if(AppState.activeScreen === 'scr_depth') getDepth();
-            if(AppState.activeScreen === 'scr_info') getInfo();
+            if(AppState.activeScreen === 'scr_depth') fetchApiWithDelay(getDepth, 500);
+            if(AppState.activeScreen === 'scr_info') fetchApiWithDelay(getInfo, 500);
         }
 
         function switchScreen(scrId, navEl) {
-            clearInterval(AppState.obInterval);
+            AppState.timeoutIds.forEach(id => clearTimeout(id)); // Clear pending fetches to avoid UI lag
             
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             navEl.classList.add('active');
             
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(scrId).classList.add('active');
-            
             AppState.activeScreen = scrId;
 
-            // Delayed fetching to avoid UI freeze during animation
-            setTimeout(() => {
-                if(scrId === 'scr_depth') { getDepth(); AppState.obInterval = setInterval(getDepth, 5000); } // Polling slowed to 5s
-                if(scrId === 'scr_hot') getHot();
-                if(scrId === 'scr_info') getInfo();
-            }, 300);
+            // Delayed fetching to prevent UI Lag during animation
+            if(scrId === 'scr_depth') fetchApiWithDelay(getDepth, 400);
+            if(scrId === 'scr_hot') fetchApiWithDelay(getHot, 400);
+            if(scrId === 'scr_info') fetchApiWithDelay(getInfo, 400);
         }
 
-        // --- 2. WEBSOCKETS (ZERO LATENCY BINANCE FEED) ---
+        function fetchApiWithDelay(func, delay) {
+            let id = setTimeout(() => { func(); }, delay);
+            AppState.timeoutIds.push(id);
+        }
+
+        // --- 2. WEBSOCKETS (LIVE PRICE 0ms LATENCY) ---
         function startLiveTicker() {
             if(AppState.binanceWs) AppState.binanceWs.close();
-            
-            let url = `wss://stream.binance.com:9443/ws/${AppState.coin.toLowerCase()}usdt@trade`;
-            AppState.binanceWs = new WebSocket(url);
-            
+            AppState.binanceWs = new WebSocket(`wss://stream.binance.com:9443/ws/${AppState.coin.toLowerCase()}usdt@trade`);
             let pEl = document.getElementById('live_price');
             let lastP = 0;
-
             AppState.binanceWs.onmessage = (e) => {
                 let p = parseFloat(JSON.parse(e.data).p);
-                pEl.innerText = p > 10 ? p.toFixed(2) : p.toFixed(4);
+                pEl.innerText = p > 10 ? p.toFixed(2) : p.toFixed(8);
                 pEl.style.color = p >= lastP ? 'var(--green)' : 'var(--red)';
                 lastP = p;
             };
         }
 
-        // --- 3. LIGHTWEIGHT CHART & AUTO-DRAW ---
+        // --- 3. CHART & AUTO-DRAW ---
         function initChart() {
             const container = document.getElementById('tv_chart');
             chart = LightweightCharts.createChart(container, {
@@ -343,25 +344,25 @@
         async function loadChartData() {
             document.getElementById('chart_loader').style.display = 'block';
             try {
-                // Try Binance API first
                 let res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${AppState.coin}USDT&interval=15m&limit=150`);
-                if(!res.ok) throw new Error("Binance failed");
+                if(!res.ok) throw new Error("Binance Blocked");
                 let d = await res.json();
                 let cData = d.map(x => ({ time: x[0]/1000, open: parseFloat(x[1]), high: parseFloat(x[2]), low: parseFloat(x[3]), close: parseFloat(x[4]) }));
                 candleSeries.setData(cData);
                 document.getElementById('chart_loader').style.display = 'none';
             } catch(e) {
-                // Fallback to backend if Binance blocks CORS
+                // Fallback to Backend History Endpoint
                 try {
-                     let res = await fetch(`/api/history?symbol=${AppState.coin}&resolution=15`);
+                     let to = Math.floor(Date.now() / 1000);
+                     let from = to - (86400 * 3);
+                     let res = await fetch(`/tv/history?symbol=${AppState.coin}&resolution=15&from=${from}&to=${to}`);
                      let d = await res.json();
                      if(d.s === 'ok') {
                          let cData = d.t.map((time, i) => ({ time: time, open: d.o[i], high: d.h[i], low: d.l[i], close: d.c[i] }));
                          candleSeries.setData(cData);
                      }
-                } catch(err) {
-                    document.getElementById('chart_loader').innerText = "Chart Data Unavailable";
-                }
+                     document.getElementById('chart_loader').style.display = 'none';
+                } catch(err) { document.getElementById('chart_loader').innerText = "Chart Offline"; }
             }
         }
 
@@ -378,7 +379,7 @@
             AppState.priceLines = [];
         }
 
-        // --- 4. THE SEQUENTIAL PREDICTOR (NO HANGING) ---
+        // --- 4. PREDICTOR (TIMER & COOLDOWN) ---
         function openPredictor() {
             document.getElementById('pred_overlay').style.display = 'block';
             setTimeout(() => document.getElementById('pred_modal').classList.add('open'), 10);
@@ -388,15 +389,33 @@
             setTimeout(() => document.getElementById('pred_overlay').style.display = 'none', 300);
         }
 
+        let isPredicting = false;
         async function startPredictionSequence() {
-            document.getElementById('pred_results').style.display = 'none';
-            document.getElementById('seq_loader').style.display = 'flex';
+            if(isPredicting) return;
+            isPredicting = true;
             
+            let btn = document.getElementById('btn_run');
+            let timerEl = document.getElementById('timer_display');
+            let resBox = document.getElementById('pred_results');
+            let seqLoader = document.getElementById('seq_loader');
+            let model = document.getElementById('ai_model').options[document.getElementById('ai_model').selectedIndex].text;
+            
+            btn.style.display = 'none';
+            resBox.style.display = 'none';
+            timerEl.style.display = 'block';
+
+            // 1. 3 Second Pre-Scan Cooldown (UI Feedback)
+            for(let i=3; i>0; i--) {
+                timerEl.innerText = i;
+                await new Promise(r => setTimeout(r, 1000));
+            }
+            timerEl.style.display = 'none';
+            seqLoader.style.display = 'flex';
+
             let text = document.getElementById('seq_text');
             let fill = document.getElementById('seq_fill');
-            let model = document.getElementById('ai_model').options[document.getElementById('ai_model').selectedIndex].text;
 
-            // Step-by-Step Loop (Gives Backend time & creates pro UX)
+            // 2. Step-by-Step UI Loader (Reduces user panic)
             const steps = [
                 {t: "Scanning Volume Nodes...", p: "20%"},
                 {t: "Checking Support & Resistance...", p: "40%"},
@@ -408,28 +427,33 @@
             for(let i=0; i<steps.length; i++) {
                 text.innerText = steps[i].t;
                 fill.style.width = steps[i].p;
-                await new Promise(r => setTimeout(r, 700)); // Deliberate sequence
+                await new Promise(r => setTimeout(r, 700));
             }
 
-            // Real API Fetch with Timeout handling
+            // 3. API Execution (1 Call Only)
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
-                
-                let res = await fetch(`/api/predict?symbol=${AppState.coin}USDT`, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                
+                let res = await fetchWithTimeout(`/api/predict?symbol=${AppState.coin}USDT`, 12000);
                 let data = await res.json();
 
                 if(data.status === 'success') {
                     fill.style.width = "100%";
                     setTimeout(() => { showPredictionData(data, model); }, 300);
-                } else { throw new Error(data.detail || "Prediction Failed"); }
+                } else { throw new Error(); }
             } catch(e) {
-                text.innerText = "Matrix Sync Failed. Server busy.";
-                text.style.color = "var(--red)";
-                showToast("Prediction Error: Try again in a moment.");
+                seqLoader.style.display = 'none';
+                showToast("Matrix Sync Failed. Server Busy.");
             }
+
+            // 4. Reset & Anti-Spam Cooldown (10 Seconds)
+            btn.style.display = 'block';
+            btn.innerText = "COOLDOWN (10s)...";
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                isPredicting = false;
+                btn.disabled = false;
+                btn.innerHTML = "⚡ INITIATE SCAN";
+            }, 10000);
         }
 
         function showPredictionData(d, modelName) {
@@ -449,14 +473,21 @@
             document.getElementById('res_ai_model').innerText = `${modelName} ANALYSIS`;
             document.getElementById('res_ai_text').innerText = d.ai_agent_analysis;
 
-            // Auto-Draw on Chart
+            // Voice TTS
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let u = new SpeechSynthesisUtterance(d.ai_agent_analysis);
+                u.rate = 1.0; u.pitch = 0.9;
+                window.speechSynthesis.speak(u);
+            }
+
             drawPositionLines(d.position.entry_price, d.position.stop_loss, d.position.take_profit_2);
         }
 
-        // --- 5. BACKGROUND APIS (Orderbook, Hot, Info) ---
+        // --- 5. BACKGROUND DATA FETCHERS ---
         async function getDepth() {
             try {
-                let res = await fetch(`/api/orderbook?symbol=${AppState.coin}/USDT`);
+                let res = await fetchWithTimeout(`/api/orderbook?symbol=${AppState.coin}/USDT`, 5000);
                 if(!res.ok) return;
                 let d = await res.json();
                 document.getElementById('ob_spread').innerText = `${d.spread.toFixed(2)} SPREAD`;
@@ -476,12 +507,15 @@
                     bHtml += `<div class="ob-row ob-bid"><span style="z-index:2;">${b.price.toFixed(4)}</span><span style="z-index:2;">${b.size.toFixed(4)}</span><style>.ob-bid:nth-child(${d.bids.indexOf(b)+1})::before{width:${w}%;}</style></div>`;
                 });
                 document.getElementById('ob_bids').innerHTML = bHtml;
+                
+                // Re-poll if still on screen
+                if(AppState.activeScreen === 'scr_depth') AppState.timeoutIds.push(setTimeout(getDepth, 5000));
             } catch(e) { document.getElementById('ob_asks').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Depth Offline</div>'; }
         }
 
         async function getHot() {
             try {
-                let res = await fetch('/api/screener');
+                let res = await fetchWithTimeout('/api/screener', 8000);
                 if(!res.ok) throw new Error();
                 let d = await res.json();
                 let html = '';
@@ -498,14 +532,13 @@
 
         async function getInfo() {
             try {
-                let r1 = await fetch(`/api/coin_info?symbol=${AppState.coin}USDT`);
+                let r1 = await fetchWithTimeout(`/api/coin_info?symbol=${AppState.coin}USDT`, 5000);
                 if(r1.ok) {
                     let d1 = await r1.json();
                     document.getElementById('info_rank').innerText = `#${d1.rank}`;
                     document.getElementById('info_vol').innerText = `$${(d1.volume_24h/1000000).toFixed(2)}M`;
                 }
-
-                let r2 = await fetch(`/api/news?symbol=${AppState.coin}USDT`);
+                let r2 = await fetchWithTimeout(`/api/news?symbol=${AppState.coin}USDT`, 5000);
                 if(r2.ok) {
                     let d2 = await r2.json();
                     let html = '';
