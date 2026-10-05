@@ -1,8 +1,8 @@
 """
 ================================================================================================
-BADA BHAI GOD ENGINE : V_DUAL_CORE_MODE
-Features: Master Switch (Render Free vs Oracle Pro), ThreadPool Executor, 
-          Auto-Delete, AI Agent, Safe Telegram Polling, Dual-Harvester System.
+BADA BHAI GOD ENGINE : V_ORACLE_PRO_UNLOCKED
+Features: Oracle Pro Mode Active, ThreadPool Executor, Auto-Delete, AI Agent, 
+          Safe Telegram Polling, Dual-Harvester System (Full Market Scan).
 ================================================================================================
 """
 
@@ -36,7 +36,7 @@ from aiogram.filters import Command
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 
 # ==============================================================================
-# CONFIG & TIMEZONE (THE MASTER SWITCH)
+# CONFIG & TIMEZONE (PRO MODE ACTIVE)
 # ==============================================================================
 IST = pytz.timezone('Asia/Kolkata')
 
@@ -44,17 +44,17 @@ def get_ist_now() -> datetime:
     return datetime.now(IST)
 
 class Config:
-    VERSION = "V_DUAL_CORE_MODE"
-    PORT = int(os.environ.get("PORT", 8080))
+    VERSION = "V_ORACLE_PRO_UNLOCKED"
+    PORT = int(os.environ.get("PORT", 8000)) # Default port for VPS
     
-    # 🔴 THE MASTER SWITCH: Change this to "ORACLE_PRO" when you upgrade your server!
-    SERVER_MODE = "RENDER_FREE" 
+    # 🔴 THE MASTER SWITCH IS NOW UNLOCKED!
+    SERVER_MODE = "ORACLE_PRO" 
     
     HF_MODEL_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
     NEWS_API_URL = "https://min-api.cryptocompare.com/data/v2/news/?lang=EN"
     EXCHANGES = ["kucoin", "binance", "bybit", "okx"]
     
-    # 20 Golden Coins for Free Tier
+    # 20 Golden Coins (Fallback array, but PRO mode will scan 800+)
     FREE_COINS = [
         "BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT", 
         "DOGE/USDT", "SHIB/USDT", "PEPE/USDT", "FLOKI/USDT", "BONK/USDT", 
@@ -97,7 +97,7 @@ ai_memory = mongo_client["god_engine_core"]["neural_logs"]
 bot = Bot(token=os.getenv("TELEGRAM_BOT_TOKEN", ""))
 dp = Dispatcher()
 
-# Set initial coins based on mode
+# Initial coins based on mode (Pro mode starts with BTC, then auto-expands to 800+)
 initial_coins = set(Config.FREE_COINS) if Config.SERVER_MODE == "RENDER_FREE" else set(["BTC/USDT"])
 engine_state = {"boot_time": time.time(), "known_coins": initial_coins}
 
@@ -136,7 +136,7 @@ class NewListingTracker:
     async def scan_for_new_coins() -> List[str]:
         """Pro Mode ONLY: Scans exchange for 800+ coins dynamically"""
         if Config.SERVER_MODE == "RENDER_FREE":
-            return list(Config.FREE_COINS) # Lock to 20 coins for Free Tier
+            return list(Config.FREE_COINS)
             
         try:
             exchange = ccxt_async.kucoin()
@@ -184,7 +184,7 @@ class QuantGodMatrix:
     @staticmethod
     def calculate_isolated_matrix(df: pd.DataFrame) -> pd.DataFrame:
         try:
-            # Full 50+ Indicator Logic kept safe here!
+            # Full 50+ Indicator Logic is active!
             df.ta.ema(length=50, append=True)
             df.ta.vwap(append=True)
             df.ta.rsi(length=14, append=True)
@@ -219,7 +219,7 @@ async def smart_harvester():
         try:
             coins = await NewListingTracker.scan_for_new_coins()
             
-            # Smart Throttling Limits
+            # Fast Throttling for ORACLE PRO (100 coins per batch, 1 sec delay)
             batch_limit = 10 if Config.SERVER_MODE == "RENDER_FREE" else 100
             delay = 10 if Config.SERVER_MODE == "RENDER_FREE" else 1
             
@@ -230,7 +230,7 @@ async def smart_harvester():
                 if df is not None:
                     records = [{"id": f"{sym}_15m_{int(row['time'])}", "symbol": sym, "timeframe": "15m", "timestamp": int(row['time']), "open": float(row['open']), "high": float(row['high']), "low": float(row['low']), "close": float(row['close']), "volume": float(row['volume'])} for _, row in df.iterrows()]
                     if records: supabase.table(SUPABASE_TABLE).upsert(records).execute()
-                await asyncio.sleep(delay) # Dynamic Sleep
+                await asyncio.sleep(delay) 
         except: pass
         await asyncio.sleep(1800)
 
@@ -275,7 +275,7 @@ async def get_screener():
         if Config.SERVER_MODE == "RENDER_FREE":
             tickers = await ex.fetch_tickers(Config.FREE_COINS)
         else:
-            tickers = await ex.fetch_tickers()
+            tickers = await ex.fetch_tickers() # PRO MODE: Scans all coins
             
         await ex.close()
         hot = [{"symbol": sym, "price": d.get('last'), "change": d.get('percentage', 0), "volume": d.get('quoteVolume', 0)} for sym, d in tickers.items() if d.get('quoteVolume', 0) > 0]
