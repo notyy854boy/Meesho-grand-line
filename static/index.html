@@ -6,7 +6,6 @@
     <title>God Engine | Native App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Zero Latency Lightweight Charts -->
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     
     <style>
@@ -52,7 +51,8 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Chart */
-        #tv_chart { width: 100%; height: 100%; }
+        #tv_chart { width: 100%; height: 100%; position: relative;}
+        .chart-loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--text-muted); font-size: 14px; font-weight: bold; z-index: 10;}
 
         /* Generic UI Elements */
         .section-header { padding: 12px 15px; font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; background: var(--bg-panel); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border);}
@@ -146,7 +146,9 @@
         
         <!-- CHART -->
         <div id="scr_chart" class="screen active">
-            <div id="tv_chart"></div>
+            <div id="tv_chart">
+                <div class="chart-loader" id="chart_loader">Loading Chart...</div>
+            </div>
         </div>
 
         <!-- ORDERBOOK -->
@@ -242,7 +244,7 @@
             activeScreen: "scr_chart",
             binanceWs: null,
             obInterval: null,
-            priceLines: [] // Stores auto-drawn lines
+            priceLines: []
         };
 
         let chart, candleSeries;
@@ -255,7 +257,7 @@
         function showToast(msg) {
             let t = document.getElementById('toast_msg');
             t.innerText = msg; t.style.display = 'block';
-            setTimeout(() => { t.style.display = 'none'; }, 2000);
+            setTimeout(() => { t.style.display = 'none'; }, 3000);
         }
 
         // --- 1. GLOBAL STATE MANAGER ---
@@ -295,9 +297,12 @@
             
             AppState.activeScreen = scrId;
 
-            if(scrId === 'scr_depth') { getDepth(); AppState.obInterval = setInterval(getDepth, 3000); }
-            if(scrId === 'scr_hot') getHot();
-            if(scrId === 'scr_info') getInfo();
+            // Delayed fetching to avoid UI freeze during animation
+            setTimeout(() => {
+                if(scrId === 'scr_depth') { getDepth(); AppState.obInterval = setInterval(getDepth, 5000); } // Polling slowed to 5s
+                if(scrId === 'scr_hot') getHot();
+                if(scrId === 'scr_info') getInfo();
+            }, 300);
         }
 
         // --- 2. WEBSOCKETS (ZERO LATENCY BINANCE FEED) ---
@@ -336,12 +341,28 @@
         }
 
         async function loadChartData() {
+            document.getElementById('chart_loader').style.display = 'block';
             try {
+                // Try Binance API first
                 let res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${AppState.coin}USDT&interval=15m&limit=150`);
+                if(!res.ok) throw new Error("Binance failed");
                 let d = await res.json();
                 let cData = d.map(x => ({ time: x[0]/1000, open: parseFloat(x[1]), high: parseFloat(x[2]), low: parseFloat(x[3]), close: parseFloat(x[4]) }));
                 candleSeries.setData(cData);
-            } catch(e) {}
+                document.getElementById('chart_loader').style.display = 'none';
+            } catch(e) {
+                // Fallback to backend if Binance blocks CORS
+                try {
+                     let res = await fetch(`/api/history?symbol=${AppState.coin}&resolution=15`);
+                     let d = await res.json();
+                     if(d.s === 'ok') {
+                         let cData = d.t.map((time, i) => ({ time: time, open: d.o[i], high: d.h[i], low: d.l[i], close: d.c[i] }));
+                         candleSeries.setData(cData);
+                     }
+                } catch(err) {
+                    document.getElementById('chart_loader').innerText = "Chart Data Unavailable";
+                }
+            }
         }
 
         function drawPositionLines(entry, sl, tp) {
@@ -390,18 +411,24 @@
                 await new Promise(r => setTimeout(r, 700)); // Deliberate sequence
             }
 
-            // Real API Fetch
+            // Real API Fetch with Timeout handling
             try {
-                let res = await fetch(`/api/predict?symbol=${AppState.coin}USDT`);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+                
+                let res = await fetch(`/api/predict?symbol=${AppState.coin}USDT`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
                 let data = await res.json();
 
                 if(data.status === 'success') {
                     fill.style.width = "100%";
                     setTimeout(() => { showPredictionData(data, model); }, 300);
-                } else { throw new Error(); }
+                } else { throw new Error(data.detail || "Prediction Failed"); }
             } catch(e) {
-                text.innerText = "Matrix Sync Failed. Retry.";
+                text.innerText = "Matrix Sync Failed. Server busy.";
                 text.style.color = "var(--red)";
+                showToast("Prediction Error: Try again in a moment.");
             }
         }
 
@@ -430,6 +457,7 @@
         async function getDepth() {
             try {
                 let res = await fetch(`/api/orderbook?symbol=${AppState.coin}/USDT`);
+                if(!res.ok) return;
                 let d = await res.json();
                 document.getElementById('ob_spread').innerText = `${d.spread.toFixed(2)} SPREAD`;
                 
@@ -448,12 +476,13 @@
                     bHtml += `<div class="ob-row ob-bid"><span style="z-index:2;">${b.price.toFixed(4)}</span><span style="z-index:2;">${b.size.toFixed(4)}</span><style>.ob-bid:nth-child(${d.bids.indexOf(b)+1})::before{width:${w}%;}</style></div>`;
                 });
                 document.getElementById('ob_bids').innerHTML = bHtml;
-            } catch(e) {}
+            } catch(e) { document.getElementById('ob_asks').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Depth Offline</div>'; }
         }
 
         async function getHot() {
             try {
                 let res = await fetch('/api/screener');
+                if(!res.ok) throw new Error();
                 let d = await res.json();
                 let html = '';
                 d.hot_zones.forEach(c => {
@@ -464,25 +493,29 @@
                     </div>`;
                 });
                 document.getElementById('hot_list').innerHTML = html;
-            } catch(e) { document.getElementById('hot_list').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Offline</div>'; }
+            } catch(e) { document.getElementById('hot_list').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Screener Offline</div>'; }
         }
 
         async function getInfo() {
             try {
                 let r1 = await fetch(`/api/coin_info?symbol=${AppState.coin}USDT`);
-                let d1 = await r1.json();
-                document.getElementById('info_rank').innerText = `#${d1.rank}`;
-                document.getElementById('info_vol').innerText = `$${(d1.volume_24h/1000000).toFixed(2)}M`;
+                if(r1.ok) {
+                    let d1 = await r1.json();
+                    document.getElementById('info_rank').innerText = `#${d1.rank}`;
+                    document.getElementById('info_vol').innerText = `$${(d1.volume_24h/1000000).toFixed(2)}M`;
+                }
 
                 let r2 = await fetch(`/api/news?symbol=${AppState.coin}USDT`);
-                let d2 = await r2.json();
-                let html = '';
-                d2.data.forEach(n => {
-                    let c = n.sentiment.includes('BULL') ? 'var(--green)' : n.sentiment.includes('BEAR') ? 'var(--red)' : 'var(--text-muted)';
-                    html += `<div style="padding:12px 15px; border-bottom:1px solid var(--border);"><div style="font-size:13px; font-weight:bold; color:#fff;">${n.title}</div><div style="font-size:10px; color:${c}; margin-top:4px; font-weight:900;">${n.sentiment}</div></div>`;
-                });
-                document.getElementById('info_news').innerHTML = html || '<div style="text-align:center; padding:20px; color:var(--text-muted);">No specific news found.</div>';
-            } catch(e) {}
+                if(r2.ok) {
+                    let d2 = await r2.json();
+                    let html = '';
+                    d2.data.forEach(n => {
+                        let c = n.sentiment.includes('BULL') ? 'var(--green)' : n.sentiment.includes('BEAR') ? 'var(--red)' : 'var(--text-muted)';
+                        html += `<div style="padding:12px 15px; border-bottom:1px solid var(--border);"><div style="font-size:13px; font-weight:bold; color:#fff;">${n.title}</div><div style="font-size:10px; color:${c}; margin-top:4px; font-weight:900;">${n.sentiment}</div></div>`;
+                    });
+                    document.getElementById('info_news').innerHTML = html || '<div style="text-align:center; padding:20px; color:var(--text-muted);">No specific news found.</div>';
+                }
+            } catch(e) { document.getElementById('info_news').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Info Offline</div>'; }
         }
     </script>
 </body>
