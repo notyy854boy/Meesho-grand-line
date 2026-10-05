@@ -3,305 +3,331 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>God Engine | Enterprise Terminal</title>
+    <title>God Engine | Native App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Zero Latency Lightweight Charts -->
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     
     <style>
         :root {
-            --bg-base: #080a0f; 
-            --bg-panel: #12151c;
-            --bg-hover: #1e232d;
-            --text-main: #d1d4dc;
-            --text-muted: #6e7685;
-            --accent: #eab308;
-            --green: #22c55e;
+            --bg-base: #07090e; 
+            --bg-panel: #11141a;
+            --bg-hover: #1c212b;
+            --text-main: #e2e8f0;
+            --text-muted: #64748b;
+            --accent: #f5a623;
+            --green: #10b981;
             --red: #ef4444;
-            --border: #222631;
+            --blue: #3b82f6;
+            --border: #1e2430;
             --font-mono: 'Courier New', Courier, monospace;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-base); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; font-size: 13px; }
-        ::-webkit-scrollbar { width: 0px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-base); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        /* --- COMPACT HEADER --- */
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--bg-panel); border-bottom: 1px solid var(--border); z-index: 100; height: 50px;}
-        .coin-selector { display: flex; align-items: center; background: var(--bg-hover); border-radius: 6px; padding: 4px 8px; border: 1px solid var(--border); width: 120px;}
-        .coin-selector input { background: transparent; border: none; color: #fff; width: 100%; font-weight: 800; font-size: 14px; text-transform: uppercase; outline: none; }
+        /* --- 1. FIXED TOP HEADER --- */
+        .header { display: flex; flex-direction: column; background: var(--bg-panel); border-bottom: 1px solid var(--border); z-index: 100; flex-shrink: 0;}
         
-        .live-ticker { text-align: right; display: flex; flex-direction: column; align-items: flex-end;}
-        .live-price { font-size: 16px; font-weight: 900; font-family: var(--font-mono); display: flex; align-items: center; gap: 6px;}
-        .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); }
-        .live-dot.active { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 1s infinite; }
-
-        @keyframes pulse { 0%, 100% {opacity: 1;} 50% {opacity: 0.3;} }
-
-        /* --- TOOLBAR (AI & Timeframe) --- */
-        .toolbar { display: flex; gap: 8px; padding: 6px 12px; background: var(--bg-base); border-bottom: 1px solid var(--border); align-items: center;}
-        .tool-select { background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; outline: none; }
-        .tool-btn { background: rgba(234, 179, 8, 0.1); color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px;}
-
-        /* --- SCREENS --- */
-        .main-content { flex: 1; position: relative; width: 100%; overflow: hidden; }
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; overflow-y: auto; padding-bottom: 60px; background: var(--bg-base);}
-        .screen.active { display: block; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; }
+        .logo-area { display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 16px; letter-spacing: 0.5px;}
+        .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: pulse 1.5s infinite; }
         
-        #tv_chart { width: 100%; height: calc(100% - 2px); }
+        .search-area { display: flex; align-items: center; background: var(--bg-hover); padding: 6px 12px; border-radius: 8px; width: 130px; border: 1px solid transparent; transition: 0.2s;}
+        .search-area:focus-within { border-color: var(--accent); }
+        .search-area input { background: transparent; border: none; color: #fff; width: 100%; font-weight: 900; outline: none; text-transform: uppercase; font-size: 14px;}
+        
+        /* Tool Bar (AI Models) */
+        .toolbar { display: flex; justify-content: space-between; padding: 8px 15px; background: var(--bg-base); border-top: 1px solid var(--border); align-items: center;}
+        .ai-select { background: var(--bg-panel); color: var(--accent); border: 1px solid var(--border); padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; outline: none;}
+        .live-price { font-family: var(--font-mono); font-size: 18px; font-weight: 900; }
 
-        /* --- UI COMPONENTS --- */
-        .section-title { padding: 8px 12px; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; background: var(--bg-panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;}
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; }
-        .grid-box { background: var(--bg-panel); padding: 10px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px;}
-        .val-label { font-size: 10px; color: var(--text-muted); font-weight: 700; }
-        .val-data { font-size: 14px; font-weight: 800; font-family: var(--font-mono);}
+        @keyframes pulse { 0%, 100% {opacity: 1;} 50% {opacity: 0.4;} }
 
-        .list-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--border); }
-        .ob-row { display: flex; justify-content: space-between; padding: 4px 12px; font-family: var(--font-mono); font-size: 12px; position: relative; z-index: 1;}
+        /* --- 2. MAIN SCROLLABLE AREA --- */
+        .main-container { flex: 1; position: relative; width: 100%; background: var(--bg-base); overflow-y: auto; padding-bottom: 80px; }
+        .screen { display: none; height: 100%; }
+        .screen.active { display: block; animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Chart */
+        #tv_chart { width: 100%; height: 100%; }
+
+        /* Generic UI Elements */
+        .section-header { padding: 12px 15px; font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; background: var(--bg-panel); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border);}
+        .card { background: var(--bg-panel); margin: 12px 15px; border-radius: 12px; padding: 15px; border: 1px solid var(--border); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-box { background: var(--bg-hover); padding: 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 4px; border: 1px solid transparent;}
+        .label-sm { font-size: 10px; color: var(--text-muted); font-weight: 800; }
+        .val-lg { font-size: 16px; font-weight: 900; font-family: var(--font-mono);}
+
+        /* Orderbook */
+        .ob-row { display: flex; justify-content: space-between; padding: 6px 15px; font-family: var(--font-mono); font-size: 12px; position: relative; z-index: 1; font-weight: bold;}
         .ob-row::before { content: ""; position: absolute; top: 0; right: 0; height: 100%; z-index: -1; }
         .ob-ask::before { background: rgba(239, 68, 68, 0.15); }
-        .ob-bid::before { background: rgba(34, 197, 94, 0.15); }
+        .ob-bid::before { background: rgba(16, 185, 129, 0.15); }
 
-        /* --- SEQUENTIAL PREDICTOR OVERLAY --- */
-        .pred-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-base); z-index: 999; display: none; flex-direction: column;}
-        .pred-header { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); background: var(--bg-panel);}
+        /* Hot List */
+        .hot-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border); transition: 0.2s;}
+        .hot-row:active { background: var(--bg-hover); }
+
+        /* --- 3. THE GOD PREDICTOR MODAL (CLEAN & FIXED) --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 900; display: none; }
+        .modal-content { position: fixed; bottom: -100%; left: 0; width: 100%; max-height: 85vh; background: var(--bg-panel); border-top: 2px solid var(--accent); border-radius: 24px 24px 0 0; z-index: 1000; transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);}
+        .modal-content.open { bottom: 0; }
         
-        .seq-loader { display: none; flex-direction: column; align-items: center; justify-content: center; height: 60%; gap: 15px;}
-        .step-text { font-family: var(--font-mono); font-size: 12px; color: var(--accent); }
-        .progress-bar { width: 60%; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; position: relative;}
-        .progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s; }
-
-        .pred-results { display: none; overflow-y: auto; padding-bottom: 20px;}
-        .verdict-banner { text-align: center; padding: 15px; margin: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-panel);}
-        .verdict-trend { font-size: 20px; font-weight: 900; letter-spacing: 1px;}
+        .drag-bar { width: 40px; height: 5px; background: var(--text-muted); border-radius: 5px; margin: 12px auto; }
+        .modal-scroll { padding: 0 15px 30px 15px; overflow-y: auto; flex: 1;}
         
-        .matrix-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 12px 12px 12px;}
-        .m-box { background: var(--bg-hover); padding: 8px; border-radius: 6px; text-align: center; border: 1px solid var(--border);}
+        /* Sequential Loader */
+        .seq-loader { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px 0; gap: 15px;}
+        .step-text { font-family: var(--font-mono); font-size: 13px; color: var(--accent); font-weight: bold;}
+        .progress-bar { width: 80%; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.4s; }
+
+        /* Results */
+        .pred-results { display: none; animation: fadeIn 0.3s ease; }
+        .trend-banner { text-align: center; padding: 15px; background: var(--bg-hover); border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border);}
+        .trend-text { font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;}
         
-        .ai-report { margin: 0 12px 12px 12px; padding: 12px; background: rgba(34, 197, 94, 0.05); border: 1px solid var(--green); border-radius: 6px; font-size: 12px; line-height: 1.5; color: #fff;}
+        .ai-report { margin-top: 15px; padding: 15px; background: rgba(59, 130, 246, 0.1); border: 1px solid var(--blue); border-radius: 8px; font-size: 13px; line-height: 1.5; color: #fff;}
 
-        /* --- BOTTOM NAV (Compact) --- */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; background: var(--bg-panel); border-top: 1px solid var(--border); display: flex; z-index: 100; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; transition: 0.1s;}
-        .nav-item i { font-size: 16px; margin-bottom: 4px; }
-        .nav-item span { font-size: 9px; font-weight: 800; text-transform: uppercase;}
-        .nav-item.active { color: #fff; background: var(--bg-hover);}
+        /* --- 4. FIXED BOTTOM NAVIGATION (UNBREAKABLE) --- */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; 
+            background: var(--bg-panel); border-top: 1px solid var(--border); 
+            display: flex; justify-content: space-around; align-items: center; z-index: 500;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 10px; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.2s;}
+        .nav-item i { font-size: 20px; margin-bottom: 5px; }
+        .nav-item.active { color: #fff; }
 
-        .loader-sm { text-align: center; padding: 20px; font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);}
+        /* BIG PREDICT BUTTON */
+        .nav-center { flex: 1.2; display: flex; justify-content: center; position: relative; top: -20px; cursor: pointer;}
+        .predict-btn { 
+            width: 60px; height: 60px; border-radius: 50%; 
+            background: linear-gradient(135deg, #f5a623, #d97706); 
+            display: flex; align-items: center; justify-content: center; 
+            border: 6px solid var(--bg-base); box-shadow: 0 4px 15px rgba(245, 166, 35, 0.4);
+            color: #000; font-size: 24px; transition: 0.2s;
+        }
+        .predict-btn:active { transform: scale(0.95); }
+
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--text-main); color: var(--bg-base); padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 13px; z-index: 9999; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5);}
     </style>
 </head>
 <body>
 
-    <!-- 1. COMPACT HEADER & REAL-TIME PRICE -->
+    <div class="toast" id="toast_msg">System Ready</div>
+
+    <!-- 1. FIXED HEADER -->
     <div class="header">
-        <div class="coin-selector">
-            <i class="fas fa-search" style="color:var(--text-muted); font-size:12px; margin-right:6px;"></i>
-            <input type="text" id="global_search" value="BTC" onkeypress="if(event.key === 'Enter') handleSearch()">
+        <div class="header-top">
+            <div class="logo-area"><div class="ws-dot" id="ws_status"></div> GOD ENGINE</div>
+            <div class="search-area">
+                <i class="fas fa-search" style="color:var(--text-muted); margin-right:8px;"></i>
+                <input type="text" id="global_search" value="BTC" onkeypress="if(event.key === 'Enter') executeCoinChange()">
+            </div>
         </div>
-        <div class="live-ticker">
-            <div class="live-price"><span class="live-dot" id="price_dot"></span> <span id="header_price">0.00</span></div>
-            <div style="font-size:9px; color:var(--text-muted); font-weight:800;">LIVE BINANCE FEED</div>
+        <div class="toolbar">
+            <select class="ai-select" id="ai_model">
+                <option value="grok">🧠 Grok (xAI)</option>
+                <option value="llama3">🦙 Llama-3 (Meta)</option>
+                <option value="mistral">🌪️ Mistral-7B</option>
+            </select>
+            <div class="live-price" id="live_price" style="color:var(--text-main);">0.00</div>
         </div>
     </div>
 
-    <!-- 2. TOOLBAR (AI Agents & Settings) -->
-    <div class="toolbar">
-        <select id="ai_model" class="tool-select">
-            <option value="grok">Grok (xAI) Neural</option>
-            <option value="llama3">Llama-3 (Meta)</option>
-            <option value="mistral">Mistral-7B Core</option>
-        </select>
-        <select id="tf_select" class="tool-select">
-            <option value="15m">15m</option>
-            <option value="1h">1H</option>
-            <option value="4h">4H</option>
-        </select>
-        <div style="flex:1;"></div>
-        <button class="tool-btn" onclick="startSequentialPrediction()"><i class="fas fa-bolt"></i> RUN MATRIX</button>
-    </div>
-
-    <!-- 3. SCREENS (Memory Managed) -->
-    <div class="main-content">
+    <!-- 2. MAIN SCREENS -->
+    <div class="main-container">
         
-        <!-- CHART SCREEN -->
+        <!-- CHART -->
         <div id="scr_chart" class="screen active">
             <div id="tv_chart"></div>
         </div>
 
-        <!-- DEPTH SCREEN -->
+        <!-- ORDERBOOK -->
         <div id="scr_depth" class="screen">
-            <div class="section-title">Orderbook Depth (Live)</div>
-            <div style="text-align:center; padding:6px; color:var(--accent); font-weight:800; font-family:var(--font-mono); font-size:12px;" id="ob_spread">0.00 SPREAD</div>
-            <div style="display:flex; justify-content:space-between; padding:4px 12px; font-size:9px; color:var(--text-muted); font-weight:800;"><span>ASK (SELL)</span><span>SIZE</span></div>
-            <div id="ob_asks"><div class="loader-sm">Syncing...</div></div>
-            <div style="height:4px;"></div>
-            <div style="display:flex; justify-content:space-between; padding:4px 12px; font-size:9px; color:var(--text-muted); font-weight:800;"><span>BID (BUY)</span><span>SIZE</span></div>
+            <div class="section-header">Live Market Depth</div>
+            <div style="text-align:center; padding:10px; color:var(--accent); font-weight:900; font-family:var(--font-mono);" id="ob_spread">0.00 SPREAD</div>
+            <div style="display:flex; justify-content:space-between; padding:4px 15px; font-size:10px; color:var(--text-muted); font-weight:bold;"><span>ASK (SELL)</span><span>SIZE</span></div>
+            <div id="ob_asks"><div style="text-align:center; padding:20px; color:var(--text-muted);">Syncing...</div></div>
+            <div style="height:5px;"></div>
+            <div style="display:flex; justify-content:space-between; padding:4px 15px; font-size:10px; color:var(--text-muted); font-weight:bold;"><span>BID (BUY)</span><span>SIZE</span></div>
             <div id="ob_bids"></div>
         </div>
 
-        <!-- HOT ZONES SCREEN -->
+        <!-- SCREENER -->
         <div id="scr_hot" class="screen">
-            <div class="section-title">Volume Scanners</div>
-            <div id="hot_list"><div class="loader-sm">Scanning Market Data...</div></div>
+            <div class="section-header">Volume Breakouts <i class="fas fa-fire" style="color:var(--red);"></i></div>
+            <div id="hot_list"><div style="text-align:center; padding:20px; color:var(--text-muted);">Scanning...</div></div>
         </div>
 
-        <!-- DATA / INFO SCREEN -->
+        <!-- INFO & NEWS -->
         <div id="scr_info" class="screen">
-            <div class="section-title">Coin Metrics</div>
-            <div class="grid-2">
-                <div class="grid-box"><div class="val-label">MARKET CAP RANK</div><div class="val-data" id="info_rank">#--</div></div>
-                <div class="grid-box"><div class="val-label">24H VOLUME</div><div class="val-data" style="color:var(--green);" id="info_vol">$--</div></div>
+            <div class="section-header">Coin Metrics</div>
+            <div class="grid-2" style="padding: 15px;">
+                <div class="grid-box"><div class="label-sm">GLOBAL RANK</div><div class="val-lg" id="info_rank">#--</div></div>
+                <div class="grid-box"><div class="label-sm">24H VOLUME</div><div class="val-lg" style="color:var(--green);" id="info_vol">$--</div></div>
             </div>
-            <div class="section-title">Neural News</div>
-            <div id="info_news"><div class="loader-sm">Fetching...</div></div>
+            <div class="section-header" style="border:none;">Neural News Feed</div>
+            <div id="info_news"><div style="text-align:center; padding:20px; color:var(--text-muted);">Fetching...</div></div>
         </div>
     </div>
 
-    <!-- 4. BOTTOM NAVIGATION -->
+    <!-- 3. FIXED BOTTOM NAVIGATION -->
     <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('scr_chart', this)"><i class="fas fa-chart-bar"></i><span>Chart</span></div>
-        <div class="nav-item" onclick="switchTab('scr_depth', this)"><i class="fas fa-water"></i><span>Depth</span></div>
-        <div class="nav-item" onclick="switchTab('scr_hot', this)"><i class="fas fa-fire"></i><span>Hot</span></div>
-        <div class="nav-item" onclick="switchTab('scr_info', this)"><i class="fas fa-database"></i><span>Data</span></div>
-    </div>
-
-    <!-- 5. SEQUENTIAL PREDICTOR OVERLAY -->
-    <div class="pred-overlay" id="pred_overlay">
-        <div class="pred-header">
-            <div style="font-weight:900; font-size:14px;"><i class="fas fa-microchip" style="color:var(--accent);"></i> GOD MATRIX</div>
-            <i class="fas fa-times" style="font-size:16px; color:var(--text-muted); cursor:pointer;" onclick="closePredictor()"></i>
+        <div class="nav-item active" onclick="switchScreen('scr_chart', this)"><i class="fas fa-chart-line"></i><span>Chart</span></div>
+        <div class="nav-item" onclick="switchScreen('scr_depth', this)"><i class="fas fa-water"></i><span>Depth</span></div>
+        
+        <!-- BIG PREDICT BUTTON -->
+        <div class="nav-center" onclick="openPredictor()">
+            <div class="predict-btn"><i class="fas fa-robot"></i></div>
         </div>
         
-        <!-- Sequential Loader -->
-        <div class="seq-loader" id="seq_loader">
-            <i class="fas fa-radar fa-spin" style="font-size:24px; color:var(--accent);"></i>
-            <div class="step-text" id="step_text">Initializing Protocol...</div>
-            <div class="progress-bar"><div class="progress-fill" id="prog_fill"></div></div>
-        </div>
+        <div class="nav-item" onclick="switchScreen('scr_hot', this)"><i class="fas fa-fire"></i><span>Hot</span></div>
+        <div class="nav-item" onclick="switchScreen('scr_info', this)"><i class="fas fa-newspaper"></i><span>Info</span></div>
+    </div>
 
-        <!-- Results Dashboard -->
-        <div class="pred-results" id="pred_results">
-            <div class="verdict-banner" id="res_verdict">
-                <div class="verdict-trend" id="res_trend">--</div>
-                <div style="font-size:10px; color:var(--text-muted); margin-top:4px;" id="res_acc">--</div>
-            </div>
+    <!-- 4. GOD PREDICTOR MODAL (SEQUENTIAL) -->
+    <div class="modal-overlay" id="pred_overlay" onclick="closePredictor()"></div>
+    <div class="modal-content" id="pred_modal">
+        <div class="drag-bar" onclick="closePredictor()"></div>
+        <div class="modal-scroll">
             
-            <div class="section-title" style="background:transparent;">Execution Strategy</div>
-            <div class="grid-2">
-                <div class="grid-box" style="border-left:2px solid var(--blue);"><div class="val-label">ENTRY PRICE</div><div class="val-data" id="res_entry">0</div></div>
-                <div class="grid-box" style="border-left:2px solid var(--accent);"><div class="val-label">LEVERAGE</div><div class="val-data" style="color:var(--accent);" id="res_lev">0</div></div>
-                <div class="grid-box" style="border-left:2px solid var(--red);"><div class="val-label">STOP LOSS</div><div class="val-data" style="color:var(--red);" id="res_sl">0</div></div>
-                <div class="grid-box" style="border-left:2px solid var(--green);"><div class="val-label">TAKE PROFIT</div><div class="val-data" style="color:var(--green);" id="res_tp">0</div></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                <div style="font-size:24px; font-weight:900;" id="pred_title_coin">BTC/USDT</div>
+                <button onclick="startPredictionSequence()" style="background:var(--accent); border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer;"><i class="fas fa-bolt"></i> RUN</button>
             </div>
 
-            <!-- Full Backend Utilization Matrix -->
-            <div class="section-title" style="background:transparent; margin-top:10px;">Technical Confluence</div>
-            <div class="matrix-grid">
-                <div class="m-box"><div class="val-label">RSI (15m)</div><div class="val-data" id="m_rsi">--</div></div>
-                <div class="m-box"><div class="val-label">MACD</div><div class="val-data" id="m_macd">--</div></div>
-                <div class="m-box"><div class="val-label">ADX</div><div class="val-data" id="m_adx">--</div></div>
-                <div class="m-box"><div class="val-label">VWAP DIST</div><div class="val-data" id="m_vwap">--</div></div>
-                <div class="m-box" style="grid-column: span 2;"><div class="val-label">CANDLE PATTERN</div><div class="val-data" id="m_pat" style="font-size:11px;">--</div></div>
+            <!-- Sequential Loading Animation -->
+            <div class="seq-loader" id="seq_loader">
+                <i class="fas fa-radar fa-spin" style="font-size:32px; color:var(--accent);"></i>
+                <div class="step-text" id="seq_text">Initializing Protocol...</div>
+                <div class="progress-bar"><div class="progress-fill" id="seq_fill"></div></div>
             </div>
 
-            <div class="section-title" style="background:transparent;">AI Agent Report (<span id="res_ai_name"></span>)</div>
-            <div class="ai-report" id="res_ai_text"></div>
+            <!-- Prediction Results -->
+            <div class="pred-results" id="pred_results">
+                <div class="trend-banner" id="res_banner">
+                    <div class="trend-text" id="res_trend">--</div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:5px; font-weight:bold;" id="res_acc">--</div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="grid-box" style="border-left: 3px solid var(--blue);"><div class="label-sm">ENTRY ZONE</div><div class="val-lg" id="res_entry">0.00</div></div>
+                    <div class="grid-box" style="border-left: 3px solid var(--accent);"><div class="label-sm">LEVERAGE</div><div class="val-lg" style="color:var(--accent);" id="res_lev">0x</div></div>
+                    <div class="grid-box" style="border-left: 3px solid var(--red);"><div class="label-sm">STOP LOSS</div><div class="val-lg" style="color:var(--red);" id="res_sl">0.00</div></div>
+                    <div class="grid-box" style="border-left: 3px solid var(--green);"><div class="label-sm">TAKE PROFIT</div><div class="val-lg" style="color:var(--green);" id="res_tp">0.00</div></div>
+                </div>
+
+                <div class="ai-report">
+                    <div style="font-size:10px; color:var(--accent); font-weight:bold; margin-bottom:5px; text-transform:uppercase;" id="res_ai_model">AI REPORT</div>
+                    <div id="res_ai_text">...</div>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <!-- ========================================== -->
-    <!-- JAVASCRIPT: EVENT LOOP & STATE MANAGER     -->
+    <!-- JAVASCRIPT: THE BRAIN & STATE MANAGER      -->
     <!-- ========================================== -->
     <script>
-        // --- STATE MANAGEMENT ---
-        const State = {
+        const AppState = {
             coin: "BTC",
-            activeTab: "scr_chart",
-            priceWs: null,
-            obInterval: null
+            activeScreen: "scr_chart",
+            binanceWs: null,
+            obInterval: null,
+            priceLines: [] // Stores auto-drawn lines
         };
 
-        let chart, series;
+        let chart, candleSeries;
 
-        // Init App
+        // Init
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
-        window.onload = () => { initChart(); switchCoin("BTC"); };
+        window.onload = () => { initChart(); setupCoin(AppState.coin); };
 
-        // --- 1. SMART EVENT LOOP (Tab Pausing) ---
-        function switchTab(tabId, el) {
-            // Pause all background tasks to save RAM & Network
-            clearInterval(State.obInterval);
-            
-            // UI Switch
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            el.classList.add('active');
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            
-            State.activeTab = tabId;
-
-            // Lazy Load Data Only for Active Tab
-            if(tabId === 'scr_depth') startOrderbookLoop();
-            if(tabId === 'scr_hot') fetchHotZones();
-            if(tabId === 'scr_info') fetchCoinData();
+        function showToast(msg) {
+            let t = document.getElementById('toast_msg');
+            t.innerText = msg; t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 2000);
         }
 
-        // --- 2. GLOBAL COIN SWITCHER ---
-        function handleSearch() {
+        // --- 1. GLOBAL STATE MANAGER ---
+        function executeCoinChange() {
             let input = document.getElementById('global_search').value.toUpperCase().replace('USDT','').trim();
-            if(!input || input === State.coin) return;
-            switchCoin(input);
-        }
-
-        function switchCoin(newCoin) {
-            document.getElementById('global_search').blur();
-            State.coin = newCoin;
-            document.getElementById('global_search').value = State.coin;
+            if(!input || input === AppState.coin) return;
             
-            // Refresh Live Price WS (0ms Latency)
-            if(State.priceWs) State.priceWs.close();
-            startLivePriceTicker();
-
-            // Refresh Chart
-            loadChartData();
-
-            // Refresh Active Tab Data
-            if(State.activeTab === 'scr_depth') { getDepthAPI(); }
-            if(State.activeTab === 'scr_info') { fetchCoinData(); }
+            document.getElementById('global_search').blur();
+            setupCoin(input);
         }
 
-        // --- 3. LIVE PRICE (DIRECT WEBSOCKET) ---
-        function startLivePriceTicker() {
-            let streamUrl = `wss://stream.binance.com:9443/ws/${State.coin.toLowerCase()}usdt@trade`;
-            State.priceWs = new WebSocket(streamUrl);
-            let pEl = document.getElementById('header_price');
-            let dot = document.getElementById('price_dot');
+        function setupCoin(coinName) {
+            AppState.coin = coinName;
+            document.getElementById('global_search').value = AppState.coin;
+            document.getElementById('pred_title_coin').innerText = `${AppState.coin}/USDT`;
+            
+            // Clean UI
+            document.getElementById('pred_results').style.display = 'none';
+            removeAutoDrawLines();
+            
+            startLiveTicker();
+            loadChartData();
+            
+            // Smart Refresh
+            if(AppState.activeScreen === 'scr_depth') getDepth();
+            if(AppState.activeScreen === 'scr_info') getInfo();
+        }
+
+        function switchScreen(scrId, navEl) {
+            clearInterval(AppState.obInterval);
+            
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            navEl.classList.add('active');
+            
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(scrId).classList.add('active');
+            
+            AppState.activeScreen = scrId;
+
+            if(scrId === 'scr_depth') { getDepth(); AppState.obInterval = setInterval(getDepth, 3000); }
+            if(scrId === 'scr_hot') getHot();
+            if(scrId === 'scr_info') getInfo();
+        }
+
+        // --- 2. WEBSOCKETS (ZERO LATENCY BINANCE FEED) ---
+        function startLiveTicker() {
+            if(AppState.binanceWs) AppState.binanceWs.close();
+            
+            let url = `wss://stream.binance.com:9443/ws/${AppState.coin.toLowerCase()}usdt@trade`;
+            AppState.binanceWs = new WebSocket(url);
+            
+            let pEl = document.getElementById('live_price');
             let lastP = 0;
 
-            State.priceWs.onopen = () => dot.classList.add('active');
-            State.priceWs.onclose = () => dot.classList.remove('active');
-            
-            State.priceWs.onmessage = (e) => {
-                let d = JSON.parse(e.data);
-                let p = parseFloat(d.p);
+            AppState.binanceWs.onmessage = (e) => {
+                let p = parseFloat(JSON.parse(e.data).p);
                 pEl.innerText = p > 10 ? p.toFixed(2) : p.toFixed(4);
                 pEl.style.color = p >= lastP ? 'var(--green)' : 'var(--red)';
                 lastP = p;
             };
         }
 
-        // --- 4. LIGHTWEIGHT CHART ---
+        // --- 3. LIGHTWEIGHT CHART & AUTO-DRAW ---
         function initChart() {
             const container = document.getElementById('tv_chart');
             chart = LightweightCharts.createChart(container, {
-                layout: { background: { color: '#080a0f' }, textColor: '#6e7685' },
-                grid: { vertLines: { color: '#12151c' }, horzLines: { color: '#12151c' } },
+                layout: { background: { color: '#07090e' }, textColor: '#64748b' },
+                grid: { vertLines: { color: '#1e2430' }, horzLines: { color: '#1e2430' } },
                 crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-                timeScale: { timeVisible: true, secondsVisible: false }
+                timeScale: { timeVisible: true }
             });
-            series = chart.addCandlestickSeries({ upColor: '#22c55e', downColor: '#ef4444', borderVisible: false, wickUpColor: '#22c55e', wickDownColor: '#ef4444' });
+            candleSeries = chart.addCandlestickSeries({ upColor: '#10b981', downColor: '#ef4444', borderVisible: false, wickUpColor: '#10b981', wickDownColor: '#ef4444' });
 
             new ResizeObserver(e => {
                 if(e.length === 0 || e[0].target !== container) return;
@@ -311,97 +337,99 @@
 
         async function loadChartData() {
             try {
-                let res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${State.coin}USDT&interval=15m&limit=100`);
+                let res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${AppState.coin}USDT&interval=15m&limit=150`);
                 let d = await res.json();
                 let cData = d.map(x => ({ time: x[0]/1000, open: parseFloat(x[1]), high: parseFloat(x[2]), low: parseFloat(x[3]), close: parseFloat(x[4]) }));
-                series.setData(cData);
+                candleSeries.setData(cData);
             } catch(e) {}
         }
 
-        // --- 5. SEQUENTIAL PREDICTOR (NO SERVER OVERLOAD) ---
-        function closePredictor() { document.getElementById('pred_overlay').style.display = 'none'; }
-        
-        async function startSequentialPrediction() {
-            document.getElementById('pred_overlay').style.display = 'flex';
+        function drawPositionLines(entry, sl, tp) {
+            removeAutoDrawLines();
+            let eLine = candleSeries.createPriceLine({ price: entry, color: '#3b82f6', lineWidth: 2, lineStyle: 2, axisLabelVisible: true, title: 'ENTRY' });
+            let slLine = candleSeries.createPriceLine({ price: sl, color: '#ef4444', lineWidth: 2, lineStyle: 2, axisLabelVisible: true, title: 'STOP' });
+            let tpLine = candleSeries.createPriceLine({ price: tp, color: '#10b981', lineWidth: 2, lineStyle: 2, axisLabelVisible: true, title: 'TARGET' });
+            AppState.priceLines.push(eLine, slLine, tpLine);
+        }
+
+        function removeAutoDrawLines() {
+            AppState.priceLines.forEach(l => candleSeries.removePriceLine(l));
+            AppState.priceLines = [];
+        }
+
+        // --- 4. THE SEQUENTIAL PREDICTOR (NO HANGING) ---
+        function openPredictor() {
+            document.getElementById('pred_overlay').style.display = 'block';
+            setTimeout(() => document.getElementById('pred_modal').classList.add('open'), 10);
+        }
+        function closePredictor() {
+            document.getElementById('pred_modal').classList.remove('open');
+            setTimeout(() => document.getElementById('pred_overlay').style.display = 'none', 300);
+        }
+
+        async function startPredictionSequence() {
             document.getElementById('pred_results').style.display = 'none';
             document.getElementById('seq_loader').style.display = 'flex';
             
-            let aiModel = document.getElementById('ai_model').options[document.getElementById('ai_model').selectedIndex].text;
-            let fill = document.getElementById('prog_fill');
-            let text = document.getElementById('step_text');
+            let text = document.getElementById('seq_text');
+            let fill = document.getElementById('seq_fill');
+            let model = document.getElementById('ai_model').options[document.getElementById('ai_model').selectedIndex].text;
 
-            // Fake Sequence for UX (Simulating individual indicator loads so user doesn't panic)
+            // Step-by-Step Loop (Gives Backend time & creates pro UX)
             const steps = [
-                {t: `Isolating ${State.coin} Agent...`, p: "20%"},
-                {t: "Scanning Orderbook Volume...", p: "40%"},
-                {t: "Plotting Technical Matrix...", p: "60%"},
-                {t: "Calculating Fibonacci & RSI...", p: "80%"},
-                {t: `Pinging ${aiModel}...`, p: "95%"}
+                {t: "Scanning Volume Nodes...", p: "20%"},
+                {t: "Checking Support & Resistance...", p: "40%"},
+                {t: "Analyzing Candlestick Patterns...", p: "60%"},
+                {t: "Calculating Fibonacci Targets...", p: "80%"},
+                {t: `Pinging ${model}...`, p: "95%"}
             ];
 
             for(let i=0; i<steps.length; i++) {
                 text.innerText = steps[i].t;
                 fill.style.width = steps[i].p;
-                await new Promise(r => setTimeout(r, 600)); // 600ms delay per step
+                await new Promise(r => setTimeout(r, 700)); // Deliberate sequence
             }
 
-            // Actual API Call to backend
+            // Real API Fetch
             try {
-                let tf = document.getElementById('tf_select').value;
-                let res = await fetch(`/api/predict?symbol=${State.coin}USDT&timeframe=${tf}`);
+                let res = await fetch(`/api/predict?symbol=${AppState.coin}USDT`);
                 let data = await res.json();
 
                 if(data.status === 'success') {
                     fill.style.width = "100%";
-                    setTimeout(() => { showResults(data, aiModel); }, 400);
+                    setTimeout(() => { showPredictionData(data, model); }, 300);
                 } else { throw new Error(); }
             } catch(e) {
-                text.innerText = "Network Matrix Failed. Retry.";
+                text.innerText = "Matrix Sync Failed. Retry.";
                 text.style.color = "var(--red)";
             }
         }
 
-        function showResults(d, aiName) {
+        function showPredictionData(d, modelName) {
             document.getElementById('seq_loader').style.display = 'none';
             document.getElementById('pred_results').style.display = 'block';
             
             let c = d.position.action === 'LONG' ? 'var(--green)' : d.position.action === 'SHORT' ? 'var(--red)' : 'var(--accent)';
-            document.getElementById('res_verdict').style.borderColor = c;
+            document.getElementById('res_banner').style.borderColor = c;
             document.getElementById('res_trend').innerHTML = `<span style="color:${c};">${d.overall_trend}</span>`;
-            document.getElementById('res_acc').innerText = `MATH ACCURACY: ${d.accuracy_score}`;
+            document.getElementById('res_acc').innerText = `ACCURACY: ${d.accuracy_score} | PATTERN: ${d.confluence.candlestick_pattern}`;
             
             document.getElementById('res_entry').innerText = d.position.entry_price;
             document.getElementById('res_lev').innerText = d.position.leverage_recommended;
             document.getElementById('res_sl').innerText = d.position.stop_loss;
             document.getElementById('res_tp').innerText = d.position.take_profit_2;
             
-            // Technical Matrix Data Integration
-            document.getElementById('m_rsi').innerText = d.confluence.rsi_15m;
-            document.getElementById('m_macd').innerText = d.confluence.macd_signal;
-            document.getElementById('m_adx').innerText = d.confluence.adx_strength;
-            document.getElementById('m_vwap').innerText = d.confluence.vwap_distance_percent + "%";
-            document.getElementById('m_pat').innerText = d.confluence.candlestick_pattern;
-
-            document.getElementById('res_ai_name').innerText = aiName;
+            document.getElementById('res_ai_model').innerText = `${modelName} ANALYSIS`;
             document.getElementById('res_ai_text').innerText = d.ai_agent_analysis;
 
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                let u = new SpeechSynthesisUtterance(d.ai_agent_analysis);
-                u.rate = 1.0; u.pitch = 0.9;
-                window.speechSynthesis.speak(u);
-            }
+            // Auto-Draw on Chart
+            drawPositionLines(d.position.entry_price, d.position.stop_loss, d.position.take_profit_2);
         }
 
-        // --- 6. BACKGROUND APIS (Orderbook, Info, Screener) ---
-        function startOrderbookLoop() {
-            getDepthAPI();
-            State.obInterval = setInterval(getDepthAPI, 3000);
-        }
-
-        async function getDepthAPI() {
+        // --- 5. BACKGROUND APIS (Orderbook, Hot, Info) ---
+        async function getDepth() {
             try {
-                let res = await fetch(`/api/orderbook?symbol=${State.coin}/USDT`);
+                let res = await fetch(`/api/orderbook?symbol=${AppState.coin}/USDT`);
                 let d = await res.json();
                 document.getElementById('ob_spread').innerText = `${d.spread.toFixed(2)} SPREAD`;
                 
@@ -423,37 +451,37 @@
             } catch(e) {}
         }
 
-        async function fetchHotZones() {
+        async function getHot() {
             try {
                 let res = await fetch('/api/screener');
                 let d = await res.json();
                 let html = '';
                 d.hot_zones.forEach(c => {
                     let up = c.change >= 0;
-                    html += `<div class="list-row" onclick="document.getElementById('global_search').value='${c.symbol.split('/')[0]}'; handleSearch(); switchTab('scr_chart', document.querySelectorAll('.nav-item')[0]);">
-                        <div><div style="font-weight:900; font-size:14px;">${c.symbol}</div><div style="font-size:10px; color:var(--text-muted); margin-top:2px;">Vol: ${(c.volume/1000000).toFixed(1)}M</div></div>
-                        <div style="text-align:right;"><div style="font-family:var(--font-mono); font-weight:bold;">${c.price.toFixed(4)}</div><div style="font-size:10px; color:${up?'var(--green)':'var(--red)'}; font-weight:800;">${up?'+':''}${c.change.toFixed(2)}%</div></div>
+                    html += `<div class="hot-row" onclick="document.getElementById('global_search').value='${c.symbol.split('/')[0]}'; executeCoinChange(); switchScreen('scr_chart', document.querySelectorAll('.nav-item')[0]); closePredictor();">
+                        <div><div style="font-weight:900; font-size:15px;">${c.symbol}</div><div style="font-size:10px; color:var(--text-muted); margin-top:2px;">Vol: ${(c.volume/1000000).toFixed(1)}M</div></div>
+                        <div style="text-align:right;"><div style="font-family:var(--font-mono); font-weight:bold; font-size:14px;">${c.price.toFixed(4)}</div><div style="font-size:11px; color:${up?'var(--green)':'var(--red)'}; font-weight:800;">${up?'+':''}${c.change.toFixed(2)}%</div></div>
                     </div>`;
                 });
                 document.getElementById('hot_list').innerHTML = html;
-            } catch(e) { document.getElementById('hot_list').innerHTML = '<div class="loader-sm">Scanner Offline</div>'; }
+            } catch(e) { document.getElementById('hot_list').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Offline</div>'; }
         }
 
-        async function fetchCoinData() {
+        async function getInfo() {
             try {
-                let r1 = await fetch(`/api/coin_info?symbol=${State.coin}USDT`);
+                let r1 = await fetch(`/api/coin_info?symbol=${AppState.coin}USDT`);
                 let d1 = await r1.json();
                 document.getElementById('info_rank').innerText = `#${d1.rank}`;
                 document.getElementById('info_vol').innerText = `$${(d1.volume_24h/1000000).toFixed(2)}M`;
 
-                let r2 = await fetch(`/api/news?symbol=${State.coin}USDT`);
+                let r2 = await fetch(`/api/news?symbol=${AppState.coin}USDT`);
                 let d2 = await r2.json();
                 let html = '';
                 d2.data.forEach(n => {
                     let c = n.sentiment.includes('BULL') ? 'var(--green)' : n.sentiment.includes('BEAR') ? 'var(--red)' : 'var(--text-muted)';
-                    html += `<div style="padding:10px 12px; border-bottom:1px solid var(--border);"><div style="font-size:12px; font-weight:600; color:#fff;">${n.title}</div><div style="font-size:9px; color:${c}; margin-top:4px; font-weight:800;">${n.sentiment}</div></div>`;
+                    html += `<div style="padding:12px 15px; border-bottom:1px solid var(--border);"><div style="font-size:13px; font-weight:bold; color:#fff;">${n.title}</div><div style="font-size:10px; color:${c}; margin-top:4px; font-weight:900;">${n.sentiment}</div></div>`;
                 });
-                document.getElementById('info_news').innerHTML = html || '<div class="loader-sm">No specific news found.</div>';
+                document.getElementById('info_news').innerHTML = html || '<div style="text-align:center; padding:20px; color:var(--text-muted);">No specific news found.</div>';
             } catch(e) {}
         }
     </script>
